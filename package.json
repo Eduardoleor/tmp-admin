@@ -13,12 +13,16 @@
     "@emotion/styled": "^11.10.0",
     "@mui/icons-material": "^5.10.2",
     "@mui/material": "^5.10.2",
+    "mui-datatables": "^4.2.2",
     "next": "12.2.5",
+    "pg": "^8.8.0",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "18.7.13",
+    "@types/pg": "^8.6.5",
     "@types/react": "18.0.17",
     "@types/react-dom": "18.0.6",
     "eslint": "8.23.0",
