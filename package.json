@@ -13,7 +13,12 @@
     "@emotion/styled": "^11.10.0",
     "@mui/icons-material": "^5.10.2",
     "@mui/material": "^5.10.2",
+    "fast-csv": "^4.3.6",
+    "formidable": "^2.0.1",
+    "fs": "^0.0.1-security",
+    "mssql": "^9.0.1",
     "mui-datatables": "^4.2.2",
+    "multiparty": "^4.2.3",
     "next": "12.2.5",
     "pg": "^8.8.0",
     "react": "18.2.0",
@@ -21,6 +26,9 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/formidable": "^2.0.5",
+    "@types/mssql": "^8.1.1",
+    "@types/multiparty": "^0.0.33",
     "@types/node": "18.7.13",
     "@types/pg": "^8.6.5",
     "@types/react": "18.0.17",
