@@ -30,6 +30,7 @@ export default async function handler(
     if (rows.length > 0) {
       const pool = require("../../lib/db");
       try {
+        await pool.query("DELETE FROM WEEKLY_INVENTORY");
         rows.map(async (item: any) => {
           await pool.query(
             "INSERT INTO WEEKLY_INVENTORY(PartNumber, BuildSequence, BalloonNumber, Qty, PONo, VendorNo, PackingDiskNo, Linea) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
