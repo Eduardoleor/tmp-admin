@@ -3,9 +3,11 @@ import { read, utils, writeFile } from "xlsx";
 
 const Main = () => {
   const [movies, setMovies] = useState<any>([]);
+  const [selectedFile, setSelectedFile] = useState<any>(null);
 
   const handleImport = ($event: any) => {
     const files = $event.target.files;
+    setSelectedFile(files);
     if (files.length) {
       const file = files[0];
       const reader = new FileReader();
@@ -43,6 +45,24 @@ const Main = () => {
     writeFile(wb, "Movie Report.xlsx");
   };
 
+  const handleUploadToBD = () => {
+    console.log(selectedFile);
+    const formData = new FormData();
+    formData.append("blob", selectedFile[0], "test");
+
+    fetch("/api/save-report", {
+      method: "POST",
+      body: formData,
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   return (
     <>
       <div className="row mb-2 mt-5">
@@ -72,6 +92,14 @@ const Main = () => {
                 className="btn btn-primary float-right"
               >
                 Export <i className="fa fa-download"></i>
+              </button>
+            </div>
+            <div className="col-md-6">
+              <button
+                onClick={handleUploadToBD}
+                className="btn btn-primary float-right"
+              >
+                Upload to BD <i className="fa fa-download"></i>
               </button>
             </div>
           </div>

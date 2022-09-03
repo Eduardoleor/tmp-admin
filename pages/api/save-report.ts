@@ -21,7 +21,8 @@ export default async function handler(
   });
 
   const files = data.files;
-  const file = files.fileupload[0];
+  console.log(files);
+  const file = files.blob[0];
   if (file?.size > 0) {
     const fileObj = xlsx.parse(file.path);
     const parseFile = fileObj[0].data;
