@@ -17,7 +17,6 @@
     "formidable": "^2.0.1",
     "fs": "^0.0.1-security",
     "mssql": "^9.0.1",
-    "mui-datatables": "^4.2.2",
     "multiparty": "^4.2.3",
     "next": "12.2.5",
     "node-xlsx": "^0.21.0",
