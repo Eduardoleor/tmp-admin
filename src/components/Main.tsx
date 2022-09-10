@@ -46,7 +46,6 @@ const Main = () => {
   };
 
   const handleUploadToBD = () => {
-    console.log(selectedFile);
     const formData = new FormData();
     formData.append("blob", selectedFile[0], "test");
 
@@ -56,10 +55,10 @@ const Main = () => {
     })
       .then((r) => r.json())
       .then((data) => {
-        console.log(data);
+        alert("File uploaded successfully");
       })
       .catch((err) => {
-        console.log(err);
+        console.error(err);
       });
   };
 
@@ -124,7 +123,6 @@ const Main = () => {
             <tbody>
               {movies.length ? (
                 movies.map((movie: any, index: number) => {
-                  console.log(movie);
                   return (
                     <tr key={index}>
                       <th scope="row">{index + 1}</th>

@@ -11,7 +11,6 @@ export default async function handler(
     res.status(405).send({ message: "Only POST requests allowed" });
     return;
   }
-
   const form = new multiparty.Form();
   const data: any = await new Promise((resolve, reject) => {
     form.parse(req, function (err, fields, files) {
@@ -19,15 +18,12 @@ export default async function handler(
       resolve({ fields, files });
     });
   });
-
   const files = data.files;
-  console.log(files);
   const file = files.blob[0];
   if (file?.size > 0) {
     const fileObj = xlsx.parse(file.path);
     const parseFile = fileObj[0].data;
     const [, ...rows] = parseFile;
-
     if (rows.length > 0) {
       const pool = require("../../lib/db");
       try {
