@@ -7,8 +7,18 @@ export default async function handler(
 ) {
   const pool = require("../../lib/db");
   try {
-    const allTasks = await pool.query("SELECT * FROM WEEKLY_INVENTORY");
-    return res.status(200).json(allTasks.rows);
+    const query = req.query;
+    const { id } = query;
+    if (id) {
+      const allTasks = await pool.query(
+        "SELECT * FROM WEEKLY_INVENTORY WHERE packingdiskno = $1",
+        [id]
+      );
+      return res.status(200).json(allTasks.rows);
+    }
+    return res.status(400).json({
+      message: "Bad Request",
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
