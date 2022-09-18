@@ -1,12 +1,67 @@
-import React, { useState } from "react";
+import {
+  AppBar,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  IconButton,
+  Paper,
+  Snackbar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Toolbar,
+  Typography,
+} from "@mui/material";
+import React, { useCallback, useEffect, useState } from "react";
 import { read, utils, writeFile } from "xlsx";
+import CloseIcon from "@mui/icons-material/Close";
 
 const Main = () => {
-  const [movies, setMovies] = useState<any>([]);
-  const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+  });
 
-  const handleImport = ($event: any) => {
-    const files = $event.target.files;
+  const callData = useCallback(() => {
+    setLoading(true);
+    fetch("/api/consult-packings")
+      .then((res) => res.json())
+      .then((res) => setData(res))
+      .catch((err) => {
+        console.log(err);
+        setError(true);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    callData();
+  }, [callData]);
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleSelectedFile = (event: any) => {
+    const files = event.target.files;
     setSelectedFile(files);
     if (files.length) {
       const file = files[0];
@@ -14,139 +69,198 @@ const Main = () => {
       reader.onload = (event: any) => {
         const wb = read(event.target.result);
         const sheets = wb.SheetNames;
-
         if (sheets.length) {
           const rows: any = utils.sheet_to_json(wb.Sheets[sheets[0]]);
-          setMovies(rows);
         }
       };
       reader.readAsArrayBuffer(file);
     }
   };
 
-  const handleExport = () => {
-    const headings = [
-      [
-        "PartNumber",
-        "BuildSequence",
-        "BalloonNumber",
-        "Qty",
-        "PONo",
-        "VendorNo",
-        "PackingDiskNo",
-        "Linea",
-      ],
-    ];
-    const wb = utils.book_new();
-    const ws = utils.json_to_sheet([]);
-    utils.sheet_add_aoa(ws, headings);
-    utils.sheet_add_json(ws, movies, { origin: "A2", skipHeader: true });
-    utils.book_append_sheet(wb, ws, "Report");
-    writeFile(wb, "Movie Report.xlsx");
-  };
-
-  const handleUploadToBD = () => {
-    const formData = new FormData();
-    formData.append("blob", selectedFile[0], "test");
-
-    fetch("/api/save-report", {
-      method: "POST",
-      body: formData,
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        alert("File uploaded successfully");
+  const handleImportFile = () => {
+    if (selectedFile) {
+      const formData = new FormData();
+      formData.append("blob", selectedFile[0], "test");
+      fetch("/api/save-report", {
+        method: "POST",
+        body: formData,
       })
-      .catch((err) => {
-        console.error(err);
-      });
+        .then((r) => r.json())
+        .then((data) => {
+          setSnackbar({
+            open: true,
+            message: "Archivo importado correctamente",
+          });
+          callData();
+        })
+        .catch((err) => {
+          setSnackbar({
+            open: true,
+            message: "Existe un error, intenta de nuevo",
+          });
+        });
+    }
+    setSnackbar({
+      open: true,
+      message: "Debes seleccionar un archivo primero",
+    });
   };
+
+  const handleExportFile = () => {};
+
+  const handleDeleteFile = () => {};
+
+  if (error) {
+    return (
+      <Box
+        bgcolor="#fafafa"
+        width="100%"
+        height="100vh"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Typography variant="h6">There was a error 🚩</Typography>
+        <Typography>Try again or try more latter.</Typography>
+      </Box>
+    );
+  }
+
+  if (loading) {
+    return (
+      <Box
+        bgcolor="#fafafa"
+        width="100%"
+        height="100vh"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <CircularProgress color="inherit" />
+        <Typography variant="h6" mt={2}>
+          Loading...
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
-    <>
-      <div className="row mb-2 mt-5">
-        <div className="col-sm-6 offset-3">
-          <div className="row">
-            <div className="col-md-6">
-              <div className="input-group">
-                <div className="custom-file">
-                  <input
-                    type="file"
-                    name="file"
-                    className="custom-file-input"
-                    id="inputGroupFile"
-                    required
-                    onChange={handleImport}
-                    accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                  />
-                  <label className="custom-file-label" htmlFor="inputGroupFile">
-                    Choose file
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <button
-                onClick={handleExport}
-                className="btn btn-primary float-right"
-              >
-                Export <i className="fa fa-download"></i>
-              </button>
-            </div>
-            <div className="col-md-6">
-              <button
-                onClick={handleUploadToBD}
-                className="btn btn-primary float-right"
-              >
-                Upload to BD <i className="fa fa-download"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="row">
-        <div className="col-sm-6 offset-3">
-          <table className="table">
-            <thead>
-              <tr>
-                <th scope="col">ID</th>
-                <th scope="col">PartNumber</th>
-                <th scope="col">BuildSequence</th>
-                <th scope="col">BalloonNumber</th>
-                <th scope="col">Qty</th>
-                <th scope="col">PONo</th>
-                <th scope="col">VendorNo</th>
-                <th scope="col">PackingDiskNo</th>
-                <th scope="col">Linea</th>
-              </tr>
-            </thead>
-            <tbody>
-              {movies.length ? (
-                movies.map((movie: any, index: number) => {
-                  return (
-                    <tr key={index}>
-                      <th scope="row">{index + 1}</th>
-                      <td>{movie.PartNumber}</td>
-                      <td>{movie.BuildSequence}</td>
-                      <td>{movie.BalloonNumber}</td>
-                      <td>{movie.Qty}</td>
-                      <td>{movie.PONo}</td>
-                      <td>{movie.VendorNo}</td>
-                      <td>{movie.PackingDiskNo}</td>
-                      <td>{movie.Linea}</td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td>No Movies Found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
+    <Container>
+      <AppBar color="primary" position="static">
+        <Toolbar>
+          <Typography>TMP | ADMIN</Typography>
+        </Toolbar>
+      </AppBar>
+      <Box my={2}>
+        <input
+          type="file"
+          name="file"
+          className="custom-file-input"
+          id="inputGroupFile"
+          required
+          onChange={handleSelectedFile}
+          accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+        />
+        <Box display="flex" flexDirection="row" my={3} gap={5}>
+          <Button variant="contained" fullWidth onClick={handleImportFile}>
+            Actualizar lista desde archivo
+          </Button>
+          <Button
+            variant="contained"
+            color="info"
+            fullWidth
+            onClick={handleExportFile}
+          >
+            Exportar lista
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            fullWidth
+            onClick={handleDeleteFile}
+          >
+            Eliminar lista
+          </Button>
+        </Box>
+      </Box>
+      <TableContainer component={Paper}>
+        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell align="right">Ballon Number</TableCell>
+              <TableCell align="right">Build Sequence</TableCell>
+              <TableCell align="right">Linea</TableCell>
+              <TableCell align="right">Packing Disk No.</TableCell>
+              <TableCell align="right">Part Number</TableCell>
+              <TableCell align="right">PO No.</TableCell>
+              <TableCell align="right">Quantity</TableCell>
+              <TableCell align="right">Vendor No.</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((row: any, index) => {
+                return (
+                  <TableRow
+                    key={index}
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                  >
+                    <TableCell component="th" scope="row">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell align="right">{row.balloonnumber}</TableCell>
+                    <TableCell align="right">{row.buildsequence}</TableCell>
+                    <TableCell align="right">{row.linea}</TableCell>
+                    <TableCell align="right">{row.packingdiskno}</TableCell>
+                    <TableCell align="right">{row.partnumber}</TableCell>
+                    <TableCell align="right">{row.pono}</TableCell>
+                    <TableCell align="right">{row.qty}</TableCell>
+                    <TableCell align="right">{row.vendorno}</TableCell>
+                  </TableRow>
+                );
+              })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[10, 20, 50, 100, 200, 300, 500, data.length]}
+        component="div"
+        count={data.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+      <Snackbar
+        open={snackbar.open}
+        message={snackbar.message}
+        onClose={() => setSnackbar({ open: false, message: "" })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        action={
+          <React.Fragment>
+            <Button
+              color="primary"
+              size="small"
+              onClick={() => setSnackbar({ open: false, message: "" })}
+            >
+              CERRAR
+            </Button>
+            <IconButton
+              size="small"
+              aria-label="close"
+              color="inherit"
+              onClick={() => setSnackbar({ open: false, message: "" })}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </React.Fragment>
+        }
+      />
+    </Container>
   );
 };
 
