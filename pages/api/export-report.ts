@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import PDFDocument from "pdfkit";
 import fs from "fs";
+import { Base64Encode } from "base64-stream";
 
 export default async function handler(
   req: NextApiRequest,
@@ -22,6 +23,9 @@ export default async function handler(
         const items = rows.filter((value: any) => Number(value.qty) > 0);
         if (items?.length) {
           const doc = new PDFDocument();
+          var finalString = "";
+          var stream = doc.pipe(new Base64Encode());
+
           doc.pipe(fs.createWriteStream(`file-${id}.pdf`));
           doc
             .fontSize(27)
@@ -46,21 +50,40 @@ export default async function handler(
           }
           doc.end();
 
-          res.setHeader("Content-Type", "application/pdf");
-          return res.send(doc);
+          stream.on("data", function (chunk) {
+            finalString += chunk;
+          });
+
+          stream.on("end", () => {
+            res.json({
+              blob: finalString,
+            });
+          });
         } else {
           const doc = new PDFDocument();
+          var finalString = "";
+          var stream = doc.pipe(new Base64Encode());
+
           doc.pipe(fs.createWriteStream(`file-${id}.pdf`));
           doc.fontSize(27).text(`Kit ${id} has been fully verified`, 100, 100);
           doc.fontSize(15).text(`Date: ${new Date()}`, 100, 200);
           doc.end();
-          res.setHeader("Content-Type", "application/pdf");
-          return res.send(doc);
+
+          stream.on("data", function (chunk) {
+            finalString += chunk;
+          });
+
+          stream.on("end", () => {
+            res.json({
+              blob: finalString,
+            });
+          });
+
+          return;
         }
       }
       return res.status(404).json({ message: "Not found ID" });
     }
-
     return res.status(400).json({ message: "There was a error" });
   } catch (error) {
     console.log(error);

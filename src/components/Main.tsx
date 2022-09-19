@@ -15,11 +15,13 @@ import {
   TablePagination,
   TableRow,
   Toolbar,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import { read, utils, writeFile } from "xlsx";
 import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const Main = () => {
   const [data, setData] = useState([]);
@@ -42,8 +44,8 @@ const Main = () => {
         setData(res);
         refreshList(res);
       })
-      .catch((err) => {
-        console.log(err);
+      .catch((error) => {
+        console.log(error);
         setError(true);
       })
       .finally(() => setLoading(false));
@@ -111,26 +113,7 @@ const Main = () => {
     });
   };
 
-  const handleExportFile = () => {
-    const headings = [
-      [
-        "PartNumber",
-        "BuildSequence",
-        "BalloonNumber",
-        "Qty",
-        "PONo",
-        "VendorNo",
-        "PackingDiskNo",
-        "Linea",
-      ],
-    ];
-    const wb = utils.book_new();
-    const ws = utils.json_to_sheet([]);
-    utils.sheet_add_aoa(ws, headings);
-    utils.sheet_add_json(ws, list, { origin: "A2", skipHeader: true });
-    utils.book_append_sheet(wb, ws, "Report");
-    writeFile(wb, `Report-${new Date()}.xlsx`);
-  };
+  const handleCreateGeneralReport = () => {};
 
   const handleDeleteFile = () => {
     setLoading(true);
@@ -200,25 +183,27 @@ const Main = () => {
           accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
         />
         <Box display="flex" flexDirection="row" my={3} gap={5}>
-          <Button variant="contained" fullWidth onClick={handleImportFile}>
-            Actualizar lista desde archivo
+          <Button
+            color={data.length ? "info" : "primary"}
+            variant="contained"
+            fullWidth
+            onClick={handleImportFile}
+          >
+            {data.length > 0 ? "Actualizar" : "Importar"}
           </Button>
           <Button
             variant="contained"
-            color="info"
+            color="primary"
             fullWidth
-            onClick={handleExportFile}
+            onClick={handleCreateGeneralReport}
           >
-            Exportar lista
+            Ver reporte general
           </Button>
-          <Button
-            variant="contained"
-            color="error"
-            fullWidth
-            onClick={handleDeleteFile}
-          >
-            Eliminar lista
-          </Button>
+          <Tooltip title="Limpiar base de datos">
+            <IconButton color="error" onClick={handleDeleteFile}>
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
       <TableContainer component={Paper}>
