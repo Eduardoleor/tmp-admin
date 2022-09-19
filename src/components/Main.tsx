@@ -23,6 +23,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 const Main = () => {
   const [data, setData] = useState([]);
+  const [list, refreshList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [page, setPage] = useState(0);
@@ -37,7 +38,10 @@ const Main = () => {
     setLoading(true);
     fetch("/api/consult-packings")
       .then((res) => res.json())
-      .then((res) => setData(res))
+      .then((res) => {
+        setData(res);
+        refreshList(res);
+      })
       .catch((err) => {
         console.log(err);
         setError(true);
@@ -71,6 +75,7 @@ const Main = () => {
         const sheets = wb.SheetNames;
         if (sheets.length) {
           const rows: any = utils.sheet_to_json(wb.Sheets[sheets[0]]);
+          refreshList(rows);
         }
       };
       reader.readAsArrayBuffer(file);
@@ -106,9 +111,40 @@ const Main = () => {
     });
   };
 
-  const handleExportFile = () => {};
+  const handleExportFile = () => {
+    const headings = [
+      [
+        "PartNumber",
+        "BuildSequence",
+        "BalloonNumber",
+        "Qty",
+        "PONo",
+        "VendorNo",
+        "PackingDiskNo",
+        "Linea",
+      ],
+    ];
+    const wb = utils.book_new();
+    const ws = utils.json_to_sheet([]);
+    utils.sheet_add_aoa(ws, headings);
+    utils.sheet_add_json(ws, list, { origin: "A2", skipHeader: true });
+    utils.book_append_sheet(wb, ws, "Report");
+    writeFile(wb, `Report-${new Date()}.xlsx`);
+  };
 
-  const handleDeleteFile = () => {};
+  const handleDeleteFile = () => {
+    setLoading(true);
+    fetch("/api/delete-report")
+      .then((res) => res.json())
+      .then((res) => callData())
+      .catch((res) => {
+        setSnackbar({
+          open: true,
+          message: "Existe un error, intenta de nuevo",
+        });
+      })
+      .finally(() => setLoading(false));
+  };
 
   if (error) {
     return (
@@ -121,8 +157,8 @@ const Main = () => {
         alignItems="center"
         justifyContent="center"
       >
-        <Typography variant="h6">There was a error 🚩</Typography>
-        <Typography>Try again or try more latter.</Typography>
+        <Typography variant="h6">Existe un error 🚩</Typography>
+        <Typography>Intenta de nuevo o intenta más tarde.</Typography>
       </Box>
     );
   }
@@ -140,7 +176,7 @@ const Main = () => {
       >
         <CircularProgress color="inherit" />
         <Typography variant="h6" mt={2}>
-          Loading...
+          Cargando...
         </Typography>
       </Box>
     );
@@ -226,6 +262,13 @@ const Main = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      {!data.length && (
+        <Box m={2}>
+          <Typography fontWeight="bold">
+            No existen datos disponibles ℹ️
+          </Typography>
+        </Box>
+      )}
       <TablePagination
         rowsPerPageOptions={[10, 20, 50, 100, 200, 300, 500, data.length]}
         component="div"
