@@ -14,7 +14,9 @@
     "@mui/icons-material": "^5.10.2",
     "@mui/material": "^5.10.2",
     "base64-stream": "^1.0.0",
+    "exceljs": "^4.3.0",
     "fast-csv": "^4.3.6",
+    "file-saver": "^2.0.5",
     "formidable": "^2.0.1",
     "fs": "^0.0.1-security",
     "mssql": "^9.0.1",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "@types/base64-stream": "^1.0.2",
+    "@types/file-saver": "^2.0.5",
     "@types/formidable": "^2.0.5",
     "@types/mssql": "^8.1.1",
     "@types/multiparty": "^0.0.33",

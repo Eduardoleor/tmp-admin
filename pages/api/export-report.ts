@@ -19,13 +19,16 @@ export default async function handler(
         [id]
       );
       if (allTasks?.rows.length) {
+        await pool.query(
+          "UPDATE WEEKLY_INVENTORY SET UpdateAt = $1 WHERE PackingDiskNo = $2",
+          [new Date(), id]
+        );
         const { rows } = allTasks;
         const items = rows.filter((value: any) => Number(value.qty) > 0);
         if (items?.length) {
           const doc = new PDFDocument();
           var finalString = "";
           var stream = doc.pipe(new Base64Encode());
-
           doc.pipe(fs.createWriteStream(`file-${id}.pdf`));
           doc
             .fontSize(27)
@@ -59,6 +62,8 @@ export default async function handler(
               blob: finalString,
             });
           });
+
+          return;
         } else {
           const doc = new PDFDocument();
           var finalString = "";
@@ -74,7 +79,7 @@ export default async function handler(
           });
 
           stream.on("end", () => {
-            res.json({
+            return res.json({
               blob: finalString,
             });
           });

@@ -19,7 +19,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
-import { read, utils, writeFile } from "xlsx";
+import { read, utils } from "xlsx";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 
@@ -113,7 +113,21 @@ const Main = () => {
     });
   };
 
-  const handleCreateGeneralReport = () => {};
+  const handleCreateGeneralReport = () => {
+    fetch("/api/create-general-report")
+      .then((response) => response.blob())
+      .then((blob) => {
+        var file = window.URL.createObjectURL(blob);
+        window.location.assign(file);
+      })
+      .catch((err) => {
+        setSnackbar({
+          open: true,
+          message: "Existe un error, intenta de nuevo",
+        });
+        console.log(err);
+      });
+  };
 
   const handleDeleteFile = () => {
     setLoading(true);
@@ -197,7 +211,7 @@ const Main = () => {
             fullWidth
             onClick={handleCreateGeneralReport}
           >
-            Ver reporte general
+            Ver reporte general (CSV)
           </Button>
           <Tooltip title="Limpiar base de datos">
             <IconButton color="error" onClick={handleDeleteFile}>
@@ -219,6 +233,7 @@ const Main = () => {
               <TableCell align="right">PO No.</TableCell>
               <TableCell align="right">Quantity</TableCell>
               <TableCell align="right">Vendor No.</TableCell>
+              <TableCell align="right">Update At</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -241,6 +256,7 @@ const Main = () => {
                     <TableCell align="right">{row.pono}</TableCell>
                     <TableCell align="right">{row.qty}</TableCell>
                     <TableCell align="right">{row.vendorno}</TableCell>
+                    <TableCell align="right">{row.updateat}</TableCell>
                   </TableRow>
                 );
               })}
