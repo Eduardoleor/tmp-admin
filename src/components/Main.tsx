@@ -220,49 +220,51 @@ const Main = () => {
           </Tooltip>
         </Box>
       </Box>
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell align="right">Ballon Number</TableCell>
-              <TableCell align="right">Build Sequence</TableCell>
-              <TableCell align="right">Linea</TableCell>
-              <TableCell align="right">Packing Disk No.</TableCell>
-              <TableCell align="right">Part Number</TableCell>
-              <TableCell align="right">PO No.</TableCell>
-              <TableCell align="right">Quantity</TableCell>
-              <TableCell align="right">Vendor No.</TableCell>
-              <TableCell align="right">Update At</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row: any, index) => {
-                return (
-                  <TableRow
-                    key={index}
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell component="th" scope="row">
-                      {index + 1}
-                    </TableCell>
-                    <TableCell align="right">{row.balloonnumber}</TableCell>
-                    <TableCell align="right">{row.buildsequence}</TableCell>
-                    <TableCell align="right">{row.linea}</TableCell>
-                    <TableCell align="right">{row.packingdiskno}</TableCell>
-                    <TableCell align="right">{row.partnumber}</TableCell>
-                    <TableCell align="right">{row.pono}</TableCell>
-                    <TableCell align="right">{row.qty}</TableCell>
-                    <TableCell align="right">{row.vendorno}</TableCell>
-                    <TableCell align="right">{row.updateat}</TableCell>
-                  </TableRow>
-                );
-              })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {data && data.length > 0 && (
+        <TableContainer component={Paper}>
+          <Table sx={{ minWidth: 650 }} aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell align="right">Ballon Number</TableCell>
+                <TableCell align="right">Build Sequence</TableCell>
+                <TableCell align="right">Linea</TableCell>
+                <TableCell align="right">Packing Disk No.</TableCell>
+                <TableCell align="right">Part Number</TableCell>
+                <TableCell align="right">PO No.</TableCell>
+                <TableCell align="right">Quantity</TableCell>
+                <TableCell align="right">Vendor No.</TableCell>
+                <TableCell align="right">Update At</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((row: any, index) => {
+                  return (
+                    <TableRow
+                      key={index}
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                    >
+                      <TableCell component="th" scope="row">
+                        {index + 1}
+                      </TableCell>
+                      <TableCell align="right">{row.balloonnumber}</TableCell>
+                      <TableCell align="right">{row.buildsequence}</TableCell>
+                      <TableCell align="right">{row.linea}</TableCell>
+                      <TableCell align="right">{row.packingdiskno}</TableCell>
+                      <TableCell align="right">{row.partnumber}</TableCell>
+                      <TableCell align="right">{row.pono}</TableCell>
+                      <TableCell align="right">{row.qty}</TableCell>
+                      <TableCell align="right">{row.vendorno}</TableCell>
+                      <TableCell align="right">{row.updateat}</TableCell>
+                    </TableRow>
+                  );
+                })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
       {!data.length && (
         <Box m={2}>
           <Typography fontWeight="bold">

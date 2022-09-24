@@ -46,7 +46,7 @@ export default async function handler(
                 .text(
                   `ID: ${i + 1} Item: ${item.packingdiskno} - part: ${
                     item.partnumber
-                  } - qty: ${item.qty}`
+                  } - qty: ${item.qty} - date: ${item.updateat}`
                 );
               doc.moveDown(1);
             }
