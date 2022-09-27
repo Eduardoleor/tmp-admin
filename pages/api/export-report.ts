@@ -2,7 +2,20 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import PDFDocument from "pdfkit";
 import fs from "fs";
+import path from "path";
 import { Base64Encode } from "base64-stream";
+
+function createDirectories(pathname: string) {
+  const __dirname = path.resolve();
+  pathname = pathname.replace(/^\.*\/|\/?[^\/]+\.[a-z]+|\/$/g, ""); // Remove leading directory markers, and remove ending /file-name.extension
+  fs.mkdir(path.resolve(__dirname, pathname), { recursive: true }, (e) => {
+    if (e) {
+      console.error(e);
+    } else {
+      console.log("Success");
+    }
+  });
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -29,7 +42,10 @@ export default async function handler(
           const doc = new PDFDocument();
           var finalString = "";
           var stream = doc.pipe(new Base64Encode());
-          doc.pipe(fs.createWriteStream(`file-${id}.pdf`));
+          createDirectories("/src/reports");
+
+          var dir = fs.createWriteStream(`src/reports/report-${id}.pdf`);
+          doc.pipe(dir);
           doc
             .fontSize(27)
             .text(
