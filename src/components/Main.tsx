@@ -272,15 +272,17 @@ const Main = () => {
           </Typography>
         </Box>
       )}
-      <TablePagination
-        rowsPerPageOptions={[10, 20, 50, 100, 200, 300, 500, data.length]}
-        component="div"
-        count={data.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
+      {data.length > 0 && (
+        <TablePagination
+          rowsPerPageOptions={[10, 20, 50, 100, 200, 300, 500, data.length]}
+          component="div"
+          count={data.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      )}
       <Snackbar
         open={snackbar.open}
         message={snackbar.message}
