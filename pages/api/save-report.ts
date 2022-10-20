@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import multiparty from "multiparty";
 import xlsx from "node-xlsx";
+import { v4 } from "uuid";
 
 export default async function handler(
   req: NextApiRequest,
@@ -31,7 +32,7 @@ export default async function handler(
           await pool.query(
             "INSERT INTO WEEKLY_INVENTORY(ID, PartNumber, BuildSequence, BalloonNumber, Qty, PONo, VendorNo, PackingDiskNo, Linea, UpdateAt, ScannedBy) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
             [
-              index + 1,
+              v4(),
               item[0],
               item[1] ?? 0,
               item[2] ?? 0,

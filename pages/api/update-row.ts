@@ -35,7 +35,6 @@ export default async function handler(
       scannedby &&
       updateat
     ) {
-      console.log("EXCUTE");
       const results = await pool.query(
         "UPDATE WEEKLY_INVENTORY SET balloonnumber = $1, buildsequence = $2, linea = $3, packingdiskno = $4, partnumber = $5, pono = $6, qty = $7, vendorno = $8, scannedby = $9, updateat = $10 WHERE id = $11",
         [
@@ -52,7 +51,6 @@ export default async function handler(
           id,
         ]
       );
-      console.log("END");
       return res.status(200).json(results.rows);
     }
     return res.status(400).json({ message: "Error on delete row" });

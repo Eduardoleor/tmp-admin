@@ -66,13 +66,7 @@ const Main = () => {
       .then((res) => res.json())
       .then((res) => {
         if (res && res.length) {
-          const items = res.map((item: any, index: number) => {
-            return {
-              id: index + 1,
-              ...item,
-            };
-          });
-          setData(items);
+          setData(res);
         }
       })
       .catch((error) => {
