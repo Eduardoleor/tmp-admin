@@ -4,33 +4,57 @@ import {
   Button,
   CircularProgress,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   IconButton,
-  Paper,
   Snackbar,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TablePagination,
-  TableRow,
+  TextField,
   Toolbar,
-  Tooltip,
   Typography,
 } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import React, { useCallback, useEffect, useState } from "react";
-import { read, utils } from "xlsx";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import GppMaybeIcon from "@mui/icons-material/GppMaybe";
+import dayjs from "dayjs";
+
+const PASSWORD_DELETED = "123abc";
+const getWindowSize = () => {
+  if (typeof window !== "undefined") {
+    const { innerWidth, innerHeight } = window;
+    return { innerWidth, innerHeight };
+  }
+};
 
 const Main = () => {
+  const [windowSize, setWindowSize] = useState(getWindowSize());
   const [data, setData] = useState([]);
-  const [list, refreshList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [openDeleted, setOpenDeleted] = useState(false);
+  const [passwordDeleted, setPasswordDeleted] = useState("");
+  const [openDetails, setOpenDetails] = useState(false);
+  const [rowSelected, setRowSelected] = useState<{
+    id: string;
+    balloonnumber: string;
+    buildsequence: string;
+    linea: string;
+    packingdiskno: string;
+    partnumber: string;
+    pono: string;
+    qty: string;
+    scannedby: string;
+    updateat: string;
+    vendorno: string;
+  } | null>(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -41,8 +65,15 @@ const Main = () => {
     fetch("/api/consult-packings")
       .then((res) => res.json())
       .then((res) => {
-        setData(res);
-        refreshList(res);
+        if (res && res.length) {
+          const items = res.map((item: any, index: number) => {
+            return {
+              id: index + 1,
+              ...item,
+            };
+          });
+          setData(items);
+        }
       })
       .catch((error) => {
         console.log(error);
@@ -55,52 +86,44 @@ const Main = () => {
     callData();
   }, [callData]);
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  useEffect(() => {
+    function handleWindowResize() {
+      setWindowSize(getWindowSize());
+    }
+    window.addEventListener("resize", handleWindowResize);
+    return () => {
+      window.removeEventListener("resize", handleWindowResize);
+    };
+  }, []);
 
   const handleSelectedFile = (event: any) => {
     const files = event.target.files;
     setSelectedFile(files);
-    if (files.length) {
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = (event: any) => {
-        const wb = read(event.target.result);
-        const sheets = wb.SheetNames;
-        if (sheets.length) {
-          const rows: any = utils.sheet_to_json(wb.Sheets[sheets[0]]);
-          refreshList(rows);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
   };
 
   const handleImportFile = () => {
     if (selectedFile) {
       const formData = new FormData();
-      formData.append("blob", selectedFile[0], "test");
+      formData.append("blob", selectedFile[0], "file");
       fetch("/api/save-report", {
         method: "POST",
         body: formData,
       })
         .then((r) => r.json())
-        .then((data) => {
+        .then(() => {
           setSnackbar({
             open: true,
             message: "Archivo importado correctamente",
           });
+          setTimeout(() => {
+            setSnackbar({
+              open: false,
+              message: "",
+            });
+          }, 3500);
           callData();
         })
-        .catch((err) => {
+        .catch(() => {
           setSnackbar({
             open: true,
             message: "Existe un error, intenta de nuevo",
@@ -129,12 +152,19 @@ const Main = () => {
       });
   };
 
-  const handleDeleteFile = () => {
+  const handleConfirmDelete = () => {
+    setOpenDeleted(true);
+  };
+
+  const handleDeleteReport = () => {
+    setOpenDeleted(false);
     setLoading(true);
     fetch("/api/delete-report")
-      .then((res) => res.json())
-      .then((res) => callData())
-      .catch((res) => {
+      .then(() => {
+        setData([]);
+        callData();
+      })
+      .catch(() => {
         setSnackbar({
           open: true,
           message: "Existe un error, intenta de nuevo",
@@ -142,6 +172,133 @@ const Main = () => {
       })
       .finally(() => setLoading(false));
   };
+
+  const handleDeleteItem = (item: any) => {
+    const { partnumber, packingdiskno } = item;
+    setLoading(true);
+    fetch(`/api/delete-row?part=${partnumber}&packing=${packingdiskno}`)
+      .then(() => callData())
+      .catch(() => {
+        setSnackbar({
+          open: true,
+          message: "Existe un error, intenta de nuevo",
+        });
+      })
+      .finally(() => setLoading(false));
+  };
+
+  const handleSelectedRow = (row: any) => {
+    setRowSelected(row);
+    setOpenDetails(true);
+  };
+
+  const handleUpdateRow = () => {
+    if (rowSelected) {
+      setLoading(true);
+      fetch(
+        `/api/update-row?id=${rowSelected.id}&balloonnumber=${rowSelected.balloonnumber}&buildsequence=${rowSelected.buildsequence}&linea=${rowSelected.linea}&packingdiskno=${rowSelected.packingdiskno}&partnumber=${rowSelected.partnumber}&pono=${rowSelected.pono}&qty=${rowSelected.qty}&vendorno=${rowSelected.vendorno}&scannedby=${rowSelected.scannedby}&updateat=${rowSelected.updateat}`
+      )
+        .then(() => {
+          setOpenDetails(false);
+          callData();
+        })
+        .catch(() => {
+          setSnackbar({
+            open: true,
+            message: "Existe un error, intenta de nuevo",
+          });
+        })
+        .finally(() => setLoading(false));
+    }
+  };
+
+  const columns: GridColDef[] = [
+    {
+      field: "id",
+      headerName: "ID",
+      sortable: false,
+    },
+    {
+      field: "partnumber",
+      headerName: "Part Number",
+      width: 200,
+      editable: false,
+      sortable: false,
+    },
+    {
+      field: "buildsequence",
+      headerName: "Build Sequence",
+      width: 150,
+      editable: false,
+      sortable: false,
+    },
+    {
+      field: "balloonnumber",
+      headerName: "Ballon Number",
+      width: 150,
+      editable: false,
+      sortable: false,
+    },
+    { field: "qty", headerName: "Quantity", editable: false, sortable: false },
+    { field: "pono", headerName: "PO No.", editable: false, sortable: false },
+    {
+      field: "vendorno",
+      headerName: "Vendor No.",
+      editable: false,
+      sortable: false,
+    },
+    {
+      field: "packingdiskno",
+      headerName: "Packing Disk No.",
+      width: 150,
+      editable: false,
+      sortable: false,
+    },
+    { field: "linea", headerName: "Linea", editable: false, sortable: false },
+    {
+      field: "updateat",
+      headerName: "Update At",
+      width: 200,
+      editable: false,
+      sortable: false,
+      type: "date",
+      valueFormatter: (params) => dayjs(params?.value).format("DD/MM/YYYY"),
+    },
+    {
+      field: "scannedby",
+      headerName: "Scanned By",
+      editable: false,
+      sortable: false,
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      editable: false,
+      sortable: false,
+      renderCell: (params) => {
+        return (
+          <>
+            <IconButton
+              aria-label="edit-item"
+              color="info"
+              size="small"
+              onClick={() => handleSelectedRow(params.row)}
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              aria-label="delete-item"
+              color="error"
+              size="small"
+              onClick={() => handleDeleteItem(params.row)}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </>
+        );
+      },
+    },
+  ];
 
   if (error) {
     return (
@@ -183,7 +340,9 @@ const Main = () => {
     <Container>
       <AppBar color="primary" position="static">
         <Toolbar>
-          <Typography>TMP | ADMIN</Typography>
+          <Typography>
+            TMP | <b>Administrador</b>
+          </Typography>
         </Toolbar>
       </AppBar>
       <Box my={2}>
@@ -196,92 +355,84 @@ const Main = () => {
           onChange={handleSelectedFile}
           accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
         />
-        <Box display="flex" flexDirection="row" my={3} gap={5}>
-          <Button
-            color={data.length ? "info" : "primary"}
-            variant="contained"
-            fullWidth
-            onClick={handleImportFile}
-          >
-            {data.length > 0 ? "Actualizar" : "Importar"}
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={handleCreateGeneralReport}
-          >
-            Ver reporte general (CSV)
-          </Button>
-          <Tooltip title="Limpiar base de datos">
-            <IconButton color="error" onClick={handleDeleteFile}>
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
+      </Box>
+      <Box display="flex" flexDirection="row" my={3} gap={5}>
+        <Button
+          fullWidth
+          disabled={!selectedFile}
+          color={data.length ? "info" : "primary"}
+          variant="contained"
+          onClick={handleImportFile}
+          sx={{ gap: 2 }}
+        >
+          <FileUploadIcon />
+          {data.length > 0 ? "Actualizar Reporte" : "Importar Reporte"}
+        </Button>
+        <Button
+          fullWidth
+          disabled={!data.length}
+          variant="contained"
+          color="primary"
+          onClick={handleCreateGeneralReport}
+          sx={{ gap: 2 }}
+        >
+          <FileDownloadIcon />
+          Descargar reporte general (CSV)
+        </Button>
+        <Button
+          fullWidth
+          disabled={!data.length}
+          variant="contained"
+          color="inherit"
+          onClick={handleConfirmDelete}
+          sx={{ gap: 2 }}
+        >
+          <GppMaybeIcon />
+          Eliminar reporte
+        </Button>
       </Box>
       {data && data.length > 0 && (
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell align="right">Ballon Number</TableCell>
-                <TableCell align="right">Build Sequence</TableCell>
-                <TableCell align="right">Linea</TableCell>
-                <TableCell align="right">Packing Disk No.</TableCell>
-                <TableCell align="right">Part Number</TableCell>
-                <TableCell align="right">PO No.</TableCell>
-                <TableCell align="right">Quantity</TableCell>
-                <TableCell align="right">Vendor No.</TableCell>
-                <TableCell align="right">Update At</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row: any, index) => {
-                  return (
-                    <TableRow
-                      key={index}
-                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                    >
-                      <TableCell component="th" scope="row">
-                        {index + 1}
-                      </TableCell>
-                      <TableCell align="right">{row.balloonnumber}</TableCell>
-                      <TableCell align="right">{row.buildsequence}</TableCell>
-                      <TableCell align="right">{row.linea}</TableCell>
-                      <TableCell align="right">{row.packingdiskno}</TableCell>
-                      <TableCell align="right">{row.partnumber}</TableCell>
-                      <TableCell align="right">{row.pono}</TableCell>
-                      <TableCell align="right">{row.qty}</TableCell>
-                      <TableCell align="right">{row.vendorno}</TableCell>
-                      <TableCell align="right">{row.updateat}</TableCell>
-                    </TableRow>
-                  );
-                })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-      {!data.length && (
-        <Box m={2}>
-          <Typography fontWeight="bold">
-            No existen datos disponibles ℹ️
-          </Typography>
+        <Box
+          style={{
+            height: windowSize?.innerHeight
+              ? windowSize?.innerHeight - 250
+              : 500,
+            width: "100%",
+          }}
+        >
+          <DataGrid
+            rows={data}
+            columns={columns}
+            pageSize={50}
+            rowsPerPageOptions={[50]}
+            checkboxSelection={false}
+            disableSelectionOnClick
+            sortModel={[
+              {
+                field: "id",
+                sort: "asc",
+              },
+            ]}
+          />
         </Box>
       )}
-      {data.length > 0 && (
-        <TablePagination
-          rowsPerPageOptions={[10, 20, 50, 100, 200, 300, 500, data.length]}
-          component="div"
-          count={data.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
+      {!data.length && (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            width: "100%",
+            height: windowSize?.innerHeight
+              ? windowSize?.innerHeight - 350
+              : 400,
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <Typography>ℹ️</Typography>
+          <Typography>No existen datos disponibles</Typography>
+        </Box>
       )}
       <Snackbar
         open={snackbar.open}
@@ -308,6 +459,218 @@ const Main = () => {
           </React.Fragment>
         }
       />
+      <Dialog
+        fullWidth
+        open={openDetails}
+        onClose={() => setOpenDetails(false)}
+      >
+        <DialogTitle>Item</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Packing ID: {rowSelected?.packingdiskno}
+          </DialogContentText>
+          <TextField
+            fullWidth
+            disabled
+            margin="dense"
+            id="id"
+            label="ID"
+            variant="standard"
+            value={rowSelected?.id}
+            style={{ marginTop: 20 }}
+            onChange={(e) =>
+              setRowSelected((prevState: any) => ({
+                ...prevState,
+                id: e.target.value,
+              }))
+            }
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            id="balloonnumber"
+            label="Ballon Number"
+            variant="standard"
+            value={rowSelected?.balloonnumber}
+            style={{ marginTop: 20 }}
+            onChange={(e) =>
+              setRowSelected((prevState: any) => ({
+                ...prevState,
+                balloonnumber: e.target.value,
+              }))
+            }
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            id="buildsequence"
+            label="Build Sequence"
+            variant="standard"
+            value={rowSelected?.buildsequence}
+            style={{ marginTop: 20 }}
+            onChange={(e) =>
+              setRowSelected((prevState: any) => ({
+                ...prevState,
+                buildsequence: e.target.value,
+              }))
+            }
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            id="linea"
+            label="Linea"
+            variant="standard"
+            value={rowSelected?.linea}
+            style={{ marginTop: 20 }}
+            onChange={(e) =>
+              setRowSelected((prevState: any) => ({
+                ...prevState,
+                linea: e.target.value,
+              }))
+            }
+          />
+          <TextField
+            fullWidth
+            disabled
+            margin="dense"
+            id="packingdiskno"
+            label="Packing Disk No."
+            variant="standard"
+            value={rowSelected?.packingdiskno}
+            style={{ marginTop: 20 }}
+            onChange={(e) =>
+              setRowSelected((prevState: any) => ({
+                ...prevState,
+                packingdiskno: e.target.value,
+              }))
+            }
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            id="partnumber"
+            label="Part Number"
+            variant="standard"
+            value={rowSelected?.partnumber}
+            style={{ marginTop: 20 }}
+            onChange={(e) =>
+              setRowSelected((prevState: any) => ({
+                ...prevState,
+                partnumber: e.target.value,
+              }))
+            }
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            id="pono"
+            label="PO No."
+            variant="standard"
+            value={rowSelected?.pono}
+            style={{ marginTop: 20 }}
+            onChange={(e) =>
+              setRowSelected((prevState: any) => ({
+                ...prevState,
+                pono: e.target.value,
+              }))
+            }
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            id="qty"
+            label="Quanity"
+            variant="standard"
+            value={rowSelected?.qty}
+            style={{ marginTop: 20 }}
+            onChange={(e) =>
+              setRowSelected((prevState: any) => ({
+                ...prevState,
+                qty: e.target.value,
+              }))
+            }
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            id="vendorno"
+            label="Vendor No."
+            variant="standard"
+            value={rowSelected?.vendorno}
+            style={{ marginTop: 20 }}
+            onChange={(e) =>
+              setRowSelected((prevState: any) => ({
+                ...prevState,
+                vendorno: e.target.value,
+              }))
+            }
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            id="scannedby"
+            label="Scanned By"
+            variant="standard"
+            value={rowSelected?.scannedby}
+            style={{ marginTop: 20 }}
+            onChange={(e) =>
+              setRowSelected((prevState: any) => ({
+                ...prevState,
+                scannedby: e.target.value,
+              }))
+            }
+          />
+          <TextField
+            fullWidth
+            disabled
+            margin="dense"
+            id="updateat"
+            label="Update At"
+            variant="standard"
+            value={rowSelected?.updateat}
+            style={{ marginTop: 20 }}
+            onChange={(e) =>
+              setRowSelected((prevState: any) => ({
+                ...prevState,
+                updateat: e.target.value,
+              }))
+            }
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button color="inherit" onClick={() => setOpenDetails(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={() => handleUpdateRow()}>Actualizar</Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={openDeleted} onClose={() => setOpenDeleted(false)}>
+        <DialogTitle>Confirmar eliminiación</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Esta acción eliminará toda la información actualizada.
+          </DialogContentText>
+          <TextField
+            fullWidth
+            id="password-deleted"
+            placeholder="Contraseña"
+            variant="standard"
+            sx={{ mt: 2 }}
+            onChange={(e) => setPasswordDeleted(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDeleted(false)}>Cancelar</Button>
+          <Button
+            disabled={PASSWORD_DELETED !== passwordDeleted}
+            color="error"
+            onClick={() => handleDeleteReport()}
+          >
+            Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

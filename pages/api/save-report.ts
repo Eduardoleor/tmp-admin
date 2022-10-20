@@ -27,18 +27,21 @@ export default async function handler(
     if (rows.length > 0) {
       const pool = require("../../lib/db");
       try {
-        rows.map(async (item: any) => {
+        rows.map(async (item: any, index: number) => {
           await pool.query(
-            "INSERT INTO WEEKLY_INVENTORY(PartNumber, BuildSequence, BalloonNumber, Qty, PONo, VendorNo, PackingDiskNo, Linea) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+            "INSERT INTO WEEKLY_INVENTORY(ID, PartNumber, BuildSequence, BalloonNumber, Qty, PONo, VendorNo, PackingDiskNo, Linea, UpdateAt, ScannedBy) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
             [
+              index + 1,
               item[0],
-              item[1],
-              item[2],
-              item[3],
-              item[4],
-              item[5],
-              item[6],
+              item[1] ?? 0,
+              item[2] ?? 0,
+              item[3] ?? 0,
+              item[4] ? item[4] : 0,
+              item[5] ?? 0,
+              item[6] ?? 0,
               item[7],
+              new Date(),
+              0,
             ]
           );
         });
