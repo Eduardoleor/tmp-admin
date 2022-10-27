@@ -1,8 +1,11 @@
 import { ReactNode } from "react";
 
+import { Box } from "@/components/system/Box";
 import DialogModal from "@/components/system/DialogModal";
-import Snack from "@/components/system/Snack";
-import { Box } from "@mui/material";
+import { Container } from "@nextui-org/react";
+
+import Footer from "./Footer";
+import Nav from "./Navbar";
 
 type LayoutProps = {
   children: ReactNode;
@@ -10,10 +13,17 @@ type LayoutProps = {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <Box>
-      {children}
+    <Box
+      css={{
+        maxW: "100%",
+      }}
+    >
       <DialogModal />
-      <Snack />
+      <Container>
+        <Nav />
+        {children}
+        <Footer />
+      </Container>
     </Box>
   );
 };

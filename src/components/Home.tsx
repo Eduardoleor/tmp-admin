@@ -1,10 +1,11 @@
-import { Text } from "@nextui-org/react";
+import Layout from "@/components/system/Layout";
+import { Button, Navbar, Text } from "@nextui-org/react";
 
 const Home = () => {
   return (
-    <div>
+    <Layout>
       <Text>home</Text>
-    </div>
+    </Layout>
   );
 };
 

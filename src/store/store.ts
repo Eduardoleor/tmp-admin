@@ -1,12 +1,10 @@
 import { Action, configureStore, ThunkAction } from "@reduxjs/toolkit";
 
 import dialogSlice from "./dialogSlice";
-import snackSlice from "./snackSlice";
 
 export const store = configureStore({
   reducer: {
     dialog: dialogSlice,
-    snack: snackSlice,
   },
   devTools: true,
   middleware: (getDefaultMiddleware) =>
