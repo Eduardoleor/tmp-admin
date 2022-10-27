@@ -1,11 +1,15 @@
 import * as React from "react";
-import Head from "next/head";
 import { AppProps } from "next/app";
-import { ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
+import Head from "next/head";
+import { CookiesProvider } from "react-cookie";
+import { Provider } from "react-redux";
+
+import createEmotionCache from "@/config/createEmotionCache";
+import theme from "@/config/theme";
+import { store } from "@/store/store";
 import { CacheProvider, EmotionCache } from "@emotion/react";
-import theme from "../src/config/theme";
-import createEmotionCache from "../src/config/createEmotionCache";
+import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider } from "@mui/material/styles";
 
 const clientSideEmotionCache = createEmotionCache();
 
@@ -16,17 +20,27 @@ interface MyAppProps extends AppProps {
 function MyApp(props: MyAppProps) {
   const { Component, emotionCache = clientSideEmotionCache, pageProps } = props;
 
+  React.useEffect(() => {
+    const jssStyles: any = document.querySelector("#jss-server-side");
+    if (jssStyles) {
+      jssStyles.parentElement.removeChild(jssStyles);
+    }
+  }, []);
+
   return (
-    <CacheProvider value={emotionCache}>
-      <Head>
-        <meta name="viewport" content="initial-scale=1, width=device-width" />
-      </Head>
-      <ThemeProvider theme={theme}>
-        {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-        <CssBaseline />
-        <Component {...pageProps} />
-      </ThemeProvider>
-    </CacheProvider>
+    <Provider store={store}>
+      <CacheProvider value={emotionCache}>
+        <Head>
+          <meta name="viewport" content="initial-scale=1, width=device-width" />
+        </Head>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <CookiesProvider>
+            <Component {...pageProps} />
+          </CookiesProvider>
+        </ThemeProvider>
+      </CacheProvider>
+    </Provider>
   );
 }
 
