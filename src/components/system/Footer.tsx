@@ -9,6 +9,7 @@ const Footer = () => {
         display: "flex",
         width: "100%",
         justifyContent: "flex-end",
+        marginTop: 20,
       }}
     >
       <Text>® All Rights Reserved | TMP {new Date().getFullYear()} </Text>

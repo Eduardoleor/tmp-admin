@@ -1,10 +1,8 @@
-import dynamic from "next/dynamic";
-
 import { Button, Link, Navbar, Text } from "@nextui-org/react";
 
 const Nav = () => {
   return (
-    <Navbar isBordered variant="floating">
+    <Navbar isBordered variant="floating" maxWidth="fluid">
       <Navbar.Brand>
         <Text b color="inherit" hideIn="xs">
           TMP | Administrator

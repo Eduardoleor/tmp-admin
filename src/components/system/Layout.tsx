@@ -21,8 +21,10 @@ const Layout = ({ children }: LayoutProps) => {
       <DialogModal />
       <Container>
         <Nav />
-        {children}
-        <Footer />
+        <Box css={{ m: 20 }}>
+          {children}
+          <Footer />
+        </Box>
       </Container>
     </Box>
   );
