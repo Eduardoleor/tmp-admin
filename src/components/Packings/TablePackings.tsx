@@ -58,7 +58,12 @@ const TablePackings = () => {
   const getPackings = () => {
     setLoading(true);
     axios("/api/packings/list")
-      .then((res) => setData(res.data?.data))
+      .then((res) => {
+        const sortedIPackings = res.data?.data?.sort((p1: any, p2: any) =>
+          p1.id < p2.id ? 1 : p1.id > p2.id ? -1 : 0
+        );
+        setData(sortedIPackings);
+      })
       .catch((err) => setError(err.response?.data?.message))
       .finally(() => setLoading(false));
   };
@@ -263,7 +268,8 @@ const TablePackings = () => {
           lined
           aria-label="table-packings"
           selectionMode="single"
-          onLoad={() => console.log("Table loaded")}
+          aria-sort="ascending"
+          sortDescriptor={{ column: "id", direction: "ascending" }}
           css={{
             height: "auto",
             minWidth: "100%",
