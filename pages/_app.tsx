@@ -1,7 +1,6 @@
 import * as React from "react";
 import { AppProps } from "next/app";
 import Head from "next/head";
-import { CookiesProvider } from "react-cookie";
 import { Provider } from "react-redux";
 import SnackbarProvider from "react-simple-snackbar";
 
@@ -14,13 +13,11 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Head>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </Head>
-      <CookiesProvider>
-        <NextUIProvider>
-          <SnackbarProvider>
-            <Component {...pageProps} />
-          </SnackbarProvider>
-        </NextUIProvider>
-      </CookiesProvider>
+      <NextUIProvider>
+        <SnackbarProvider>
+          <Component {...pageProps} />
+        </SnackbarProvider>
+      </NextUIProvider>
     </Provider>
   );
 }

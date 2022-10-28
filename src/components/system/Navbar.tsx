@@ -1,6 +1,17 @@
+import { useRouter } from "next/router";
+import { deleteCookie } from "cookies-next";
+
 import { Button, Link, Navbar, Text } from "@nextui-org/react";
 
 const Nav = () => {
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    deleteCookie("user");
+    deleteCookie("token");
+    router.push("/auth/sign_in");
+  };
+
   return (
     <Navbar isBordered variant="floating" maxWidth="fluid">
       <Navbar.Brand>
@@ -16,8 +27,8 @@ const Nav = () => {
       </Navbar.Content>
       <Navbar.Content>
         <Navbar.Item>
-          <Button auto as={Link} flat href="#">
-            Sign Up
+          <Button color="error" auto as={Link} flat onPress={handleSignOut}>
+            Sign Out
           </Button>
         </Navbar.Item>
       </Navbar.Content>
