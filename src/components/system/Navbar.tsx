@@ -27,7 +27,7 @@ const Nav = () => {
       </Navbar.Content>
       <Navbar.Content>
         <Navbar.Item>
-          <Button color="error" auto as={Link} flat onPress={handleSignOut}>
+          <Button color="error" auto as={Link} light onPress={handleSignOut}>
             Sign Out
           </Button>
         </Navbar.Item>

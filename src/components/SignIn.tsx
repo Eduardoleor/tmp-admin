@@ -105,7 +105,7 @@ const SignIn = () => {
                 setSession({ ...session, email: e.target.value })
               }
             />
-            <Input
+            <Input.Password
               label="Password"
               placeholder="******"
               type="password"

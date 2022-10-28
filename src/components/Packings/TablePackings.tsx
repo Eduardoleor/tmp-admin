@@ -1,84 +1,174 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import dayjs from "dayjs";
+import { useSnackbar } from "react-simple-snackbar";
+
 import { EditIcon } from "@/components/Icons//EditIcon";
 import { DeleteIcon } from "@/components/Icons/DeleteIcon";
+import ModalPackingsDelete from "@/components/packings/ModalPackingsDelete";
+import ModalPackingsUpdate from "@/components/packings/ModalPackingsUpdate";
+import TablePackingsActions from "@/components/packings/TablePackingsActions";
+import { Box } from "@/components/system/Box";
 import { IconButton } from "@/components/system/IconButton";
-import { Col, Row, Table, Text, Tooltip } from "@nextui-org/react";
+import {
+  Col,
+  Input,
+  Loading,
+  Row,
+  Table,
+  Text,
+  Tooltip,
+} from "@nextui-org/react";
 
 const TablePackings = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState<[]>([]);
+  const [fileSelected, setFileSelected] = useState<File[] | null>(null);
+  const [openModalDelete, setOpenModalDelete] = useState(false);
+  const [openModalEdit, setOpenModalEdit] = useState(false);
+  const [packingSelected, setPackingSelected] = useState<{
+    id: string;
+    balloonnumber: string;
+    buildsequence: string;
+    linea: string;
+    packingdiskno: string;
+    partnumber: string;
+    pono: string;
+    qty: string;
+    scannedby: string;
+    updateat: string;
+    vendorno: string;
+  } | null>(null);
+
+  const [openSnackbar] = useSnackbar();
+
   const columns = [
-    { name: "NAME", uid: "name" },
-    { name: "ROLE", uid: "role" },
-    { name: "STATUS", uid: "status" },
+    { name: "ID", uid: "id" },
+    { name: "Part Number", uid: "partnumber" },
+    { name: "Build Sequence", uid: "buildsequence" },
+    { name: "Ballon Number", uid: "balloonnumber" },
+    { name: "Vendor No.", uid: "vendorno" },
+    { name: "Packing Disk No.", uid: "packingdiskno" },
+    { name: "Update At", uid: "updateat" },
+    { name: "Scanned By", uid: "scannedby" },
     { name: "ACTIONS", uid: "actions" },
   ];
 
-  const users = [
-    {
-      id: 1,
-      name: "Tony Reichert",
-      role: "CEO",
-      team: "Management",
-      status: "active",
-      age: "29",
-      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-      email: "tony.reichert@example.com",
-    },
-    {
-      id: 2,
-      name: "Zoey Lang",
-      role: "Technical Lead",
-      team: "Development",
-      status: "paused",
-      age: "25",
-      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-      email: "zoey.lang@example.com",
-    },
-    {
-      id: 3,
-      name: "Jane Fisher",
-      role: "Senior Developer",
-      team: "Development",
-      status: "active",
-      age: "22",
-      avatar: "https://i.pravatar.cc/150?u=a04258114e29026702d",
-      email: "jane.fisher@example.com",
-    },
-    {
-      id: 4,
-      name: "William Howard",
-      role: "Community Manager",
-      team: "Marketing",
-      status: "vacation",
-      age: "28",
-      avatar: "https://i.pravatar.cc/150?u=a048581f4e29026701d",
-      email: "william.howard@example.com",
-    },
-    {
-      id: 5,
-      name: "Kristen Copper",
-      role: "Sales Manager",
-      team: "Sales",
-      status: "active",
-      age: "24",
-      avatar: "https://i.pravatar.cc/150?u=a092581d4ef9026700d",
-      email: "kristen.cooper@example.com",
-    },
-  ];
+  const getPackings = () => {
+    setLoading(true);
+    axios("/api/packings/list")
+      .then((res) => setData(res.data?.data))
+      .catch((err) => setError(err.response?.data?.message))
+      .finally(() => setLoading(false));
+  };
 
-  const renderCell = (user: any, columnKey: any) => {
-    const cellValue = user[columnKey];
+  const handleUpload = () => {
+    if (fileSelected) {
+      setLoading(true);
+
+      const formData = new FormData();
+      formData.append("blob", fileSelected[0], "file");
+
+      axios({
+        method: "post",
+        url: "/api/packings/upload",
+        data: formData,
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+        .then((res) => {
+          openSnackbar(res.data?.message);
+          getPackings();
+        })
+        .catch((err) => openSnackbar(err.response?.data?.message))
+        .finally(() => setLoading(false));
+    }
+  };
+
+  const handleDownload = () => {
+    setLoading(true);
+    axios("/api/packings/download", { responseType: "blob" })
+      .then((res) => {
+        const file = window.URL.createObjectURL(res.data);
+        window.location.assign(file);
+        openSnackbar("Downloaded successfully");
+      })
+      .catch((err) => openSnackbar(err.response?.data?.message))
+      .finally(() => setLoading(false));
+  };
+
+  const handleDelete = () => {
+    setLoading(true);
+    axios
+      .delete("/api/packings/delete")
+      .then((res) => {
+        openSnackbar(res.data?.message);
+        setOpenModalDelete(false);
+        getPackings();
+      })
+      .catch((err) => openSnackbar(err.response?.data?.message))
+      .finally(() => setLoading(false));
+  };
+
+  const handleUpdate = () => {
+    setLoading(true);
+    axios
+      .put("/api/packings/table/update", null, { params: packingSelected })
+      .then((res) => {
+        openSnackbar(res.data?.message);
+        setOpenModalEdit(false);
+        getPackings();
+      })
+      .catch((err) => {
+        openSnackbar(err.response?.data?.message);
+        setOpenModalEdit(false);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  const handleDeletePackingRow = (part: number, packing: number) => {
+    setLoading(true);
+
+    const params = {
+      part,
+      packing,
+    };
+
+    axios
+      .delete("/api/packings/table/delete", { params })
+      .then((res) => {
+        openSnackbar(res.data?.message);
+        getPackings();
+      })
+      .catch((err) => openSnackbar(err.response?.data?.message))
+      .finally(() => setLoading(false));
+  };
+
+  const handleUpdatPackingRow = (packing: any) => {
+    setOpenModalEdit(true);
+    setPackingSelected(packing);
+  };
+
+  const renderCell = (packing: any, columnKey: any) => {
+    const cellValue = packing[columnKey];
     switch (columnKey) {
-      case "role":
+      case "id":
         return (
           <Col>
             <Row>
-              <Text b size={14} css={{ tt: "capitalize" }}>
-                {cellValue}
-              </Text>
+              <Tooltip content={cellValue} color="invert">
+                <Text>{cellValue.slice(0, 5)}</Text>
+              </Tooltip>
             </Row>
+          </Col>
+        );
+      case "updateat":
+        return (
+          <Col>
             <Row>
-              <Text b size={13} css={{ tt: "capitalize", color: "$accents7" }}>
-                {user.team}
-              </Text>
+              <Tooltip content={cellValue} color="invert">
+                <Text>{dayjs(cellValue).format("DD/MM/YYYY")}</Text>
+              </Tooltip>
             </Row>
           </Col>
         );
@@ -86,17 +176,22 @@ const TablePackings = () => {
         return (
           <Row justify="center" align="center">
             <Col css={{ d: "flex" }}>
-              <Tooltip content="Edit user">
-                <IconButton onClick={() => console.log("Edit user", user.id)}>
+              <Tooltip content="Edit Packing">
+                <IconButton onClick={() => handleUpdatPackingRow(packing)}>
                   <EditIcon size={20} fill="#979797" />
                 </IconButton>
               </Tooltip>
             </Col>
             <Col css={{ d: "flex" }}>
               <Tooltip
-                content="Delete user"
+                content="Delete Packing"
                 color="error"
-                onClick={() => console.log("Delete user", user.id)}
+                onClick={() =>
+                  handleDeletePackingRow(
+                    packing.partnumber,
+                    packing.packingdiskno
+                  )
+                }
               >
                 <IconButton>
                   <DeleteIcon size={20} fill="#FF0080" />
@@ -110,45 +205,112 @@ const TablePackings = () => {
     }
   };
 
+  useEffect(() => {
+    getPackings();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box
+        css={{
+          display: "flex",
+          width: "100%",
+          height: "100vh",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Loading size="lg">Loading...</Loading>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box
+        css={{
+          display: "flex",
+          width: "100%",
+          height: "100vh",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text>There is an error getting the information</Text>
+      </Box>
+    );
+  }
+
   return (
-    <Table
-      lined
-      aria-label="table-packings"
-      selectionMode="single"
-      onLoad={() => console.log("Table loaded")}
-      css={{
-        height: "auto",
-        minWidth: "100%",
-      }}
-    >
-      <Table.Header columns={columns}>
-        {(column) => (
-          <Table.Column
-            key={column.uid}
-            hideHeader={column.uid === "actions"}
-            align={column.uid === "actions" ? "center" : "start"}
-          >
-            {column.name}
-          </Table.Column>
-        )}
-      </Table.Header>
-      <Table.Body items={users}>
-        {(item) => (
-          <Table.Row>
-            {(columnKey) => (
-              <Table.Cell>{renderCell(item, columnKey)}</Table.Cell>
-            )}
-          </Table.Row>
-        )}
-      </Table.Body>
-      <Table.Pagination
-        shadow
-        noMargin
-        align="center"
-        rowsPerPage={3}
-        onPageChange={(page) => console.log({ page })}
+    <>
+      <TablePackingsActions
+        onUpdate={handleUpload}
+        onDownload={handleDownload}
+        onDelete={() => setOpenModalDelete(true)}
+        onSelectedFile={(file) => setFileSelected(file)}
+        fileSelected={fileSelected}
+        data={data}
       />
-    </Table>
+      <Input
+        fullWidth
+        clearable
+        bordered
+        labelPlaceholder="Packing ID"
+        css={{ my: 35 }}
+      />
+      {!loading && data.length > 0 ? (
+        <Table
+          lined
+          aria-label="table-packings"
+          selectionMode="single"
+          onLoad={() => console.log("Table loaded")}
+          css={{
+            height: "auto",
+            minWidth: "100%",
+          }}
+        >
+          <Table.Header columns={columns}>
+            {(column) => (
+              <Table.Column
+                key={column.uid}
+                hideHeader={column.uid === "actions"}
+                align={column.uid === "actions" ? "center" : "start"}
+              >
+                {column.name}
+              </Table.Column>
+            )}
+          </Table.Header>
+          <Table.Body items={data}>
+            {(item) => (
+              <Table.Row>
+                {(columnKey) => (
+                  <Table.Cell>{renderCell(item, columnKey)}</Table.Cell>
+                )}
+              </Table.Row>
+            )}
+          </Table.Body>
+          <Table.Pagination shadow noMargin align="center" rowsPerPage={30} />
+        </Table>
+      ) : (
+        <Text>Not found packings</Text>
+      )}
+      <ModalPackingsDelete
+        open={openModalDelete}
+        onClose={() => setOpenModalDelete(false)}
+        onConfirm={handleDelete}
+        password={process.env.NEXT_PUBLIC_ADMIN_PASSWORD as string}
+      />
+      <ModalPackingsUpdate
+        open={openModalEdit}
+        onClose={() => {
+          setOpenModalEdit(false);
+          setPackingSelected(null);
+        }}
+        onConfirm={handleUpdate}
+        onUpdate={setPackingSelected}
+        packing={packingSelected}
+      />
+    </>
   );
 };
 

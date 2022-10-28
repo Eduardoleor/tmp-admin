@@ -1,4 +1,3 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 import multiparty from "multiparty";
 import xlsx from "node-xlsx";
@@ -8,10 +7,14 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "POST") {
-    res.status(405).send({ message: "Only POST requests allowed" });
-    return;
+  if (req.method?.toLocaleLowerCase() !== "post") {
+    return res.status(400).send({
+      success: false,
+      status: 400,
+      message: "Bad Request",
+    });
   }
+
   const form = new multiparty.Form();
   const data: any = await new Promise((resolve, reject) => {
     form.parse(req, function (err, fields, files) {
@@ -19,14 +22,17 @@ export default async function handler(
       resolve({ fields, files });
     });
   });
+
   const files = data.files;
   const file = files.blob[0];
+
   if (file?.size > 0) {
     const fileObj = xlsx.parse(file.path);
     const parseFile = fileObj[0].data;
     const [, ...rows] = parseFile;
     if (rows.length > 0) {
-      const pool = require("../../lib/db");
+      const pool = require("../../../lib/db");
+
       try {
         rows.map(async (item: any, index: number) => {
           await pool.query(
@@ -46,18 +52,32 @@ export default async function handler(
             ]
           );
         });
-        return res
-          .status(200)
-          .json({ message: "The file was successfully updated" });
+        return res.status(200).json({
+          success: true,
+          status: 200,
+          message: "The file was successfully updated",
+        });
       } catch (err) {
-        return res.status(500).json({ message: err });
+        return res.status(500).json({
+          success: false,
+          status: 500,
+          message: err,
+        });
       }
     }
 
-    return res.status(400).json({ message: "Document not valid" });
+    return res.status(400).json({
+      success: false,
+      status: 400,
+      message: "This file is empty",
+    });
   }
 
-  return res.status(500).json({ message: "File not found" });
+  return res.status(500).json({
+    success: false,
+    status: 500,
+    message: "Internal Server Error",
+  });
 }
 
 export const config = {

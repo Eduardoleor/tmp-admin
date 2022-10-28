@@ -39,7 +39,7 @@ const Home = () => {
 
   return (
     <Layout>
-      <Text size="$xl" css={{ mb: 10 }}>
+      <Text size="$xl" css={{ my: 20 }}>
         List of Packings
       </Text>
       <TablePackings />
