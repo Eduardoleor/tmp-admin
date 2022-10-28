@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import { useSnackbar } from "react-simple-snackbar";
@@ -12,6 +12,7 @@ import { Box } from "@/components/system/Box";
 import { IconButton } from "@/components/system/IconButton";
 import {
   Col,
+  Divider,
   Input,
   Loading,
   Row,
@@ -23,10 +24,11 @@ import {
 const TablePackings = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [data, setData] = useState<[]>([]);
+  const [data, setData] = useState<[] | any>([]);
   const [fileSelected, setFileSelected] = useState<File[] | null>(null);
   const [openModalDelete, setOpenModalDelete] = useState(false);
   const [openModalEdit, setOpenModalEdit] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [packingSelected, setPackingSelected] = useState<{
     id: string;
     balloonnumber: string;
@@ -210,6 +212,32 @@ const TablePackings = () => {
     }
   };
 
+  const filteredRows = useMemo(() => {
+    if (!searchTerm) return data;
+
+    if (data.length > 0) {
+      const attributes = Object.keys(data[0] as any);
+      const list: any = [];
+      for (const current of data as any) {
+        for (const attribute of attributes) {
+          if (attribute === "key") {
+            continue;
+          }
+          const value: any = current[attribute];
+          if (value && value.toLowerCase() === searchTerm.toLowerCase()) {
+            const found = data.find((row: any) => row.key === current.key);
+            if (found) {
+              list.push(found);
+            }
+          }
+        }
+      }
+      return list;
+    }
+
+    return [];
+  }, [searchTerm, data]);
+
   useEffect(() => {
     getPackings();
   }, []);
@@ -256,13 +284,23 @@ const TablePackings = () => {
         fileSelected={fileSelected}
         data={data}
       />
-      <Input
-        fullWidth
-        clearable
-        bordered
-        labelPlaceholder="Packing ID"
-        css={{ my: 35 }}
-      />
+      {!loading && data.length > 0 && (
+        <>
+          <Divider css={{ my: 30 }} />
+          <Text b css={{ mt: 100 }}>
+            Total Packings List Items: {data.length}
+          </Text>
+          <Input
+            fullWidth
+            clearable
+            bordered
+            labelPlaceholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            css={{ my: 35 }}
+          />
+        </>
+      )}
       {!loading && data.length > 0 ? (
         <Table
           lined
@@ -286,7 +324,7 @@ const TablePackings = () => {
               </Table.Column>
             )}
           </Table.Header>
-          <Table.Body items={data}>
+          <Table.Body items={filteredRows}>
             {(item) => (
               <Table.Row>
                 {(columnKey) => (
