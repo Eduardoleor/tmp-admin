@@ -288,7 +288,7 @@ const TablePackings = () => {
         <>
           <Divider css={{ my: 30 }} />
           <Text b css={{ mt: 100 }}>
-            Total Packings List Items: {data.length}
+            Total Packings List Items: {data.length?.toLocaleString("es-MX")}
           </Text>
           <Input
             fullWidth
