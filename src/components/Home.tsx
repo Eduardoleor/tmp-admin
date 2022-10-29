@@ -32,7 +32,7 @@ const Home = () => {
           justifyContent: "center",
         }}
       >
-        <Loading size="lg">Loading...</Loading>
+        <Loading size="md">Loading...</Loading>
       </Box>
     );
   }

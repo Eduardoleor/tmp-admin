@@ -21,27 +21,28 @@ import {
   Tooltip,
 } from "@nextui-org/react";
 
+type Packing = {
+  id: string;
+  balloonnumber: string;
+  buildsequence: string;
+  linea: string;
+  packingdiskno: string;
+  partnumber: string;
+  pono: string;
+  qty: string;
+  scannedby: string;
+  updateat: string;
+  vendorno: string;
+};
+
 const TablePackings = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState<[] | any>([]);
   const [fileSelected, setFileSelected] = useState<File[] | null>(null);
   const [openModalDelete, setOpenModalDelete] = useState(false);
-  const [openModalEdit, setOpenModalEdit] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [packingSelected, setPackingSelected] = useState<{
-    id: string;
-    balloonnumber: string;
-    buildsequence: string;
-    linea: string;
-    packingdiskno: string;
-    partnumber: string;
-    pono: string;
-    qty: string;
-    scannedby: string;
-    updateat: string;
-    vendorno: string;
-  } | null>(null);
+  const [packingSelected, setPackingSelected] = useState<Packing | null>(null);
 
   const [openSnackbar] = useSnackbar();
 
@@ -117,18 +118,18 @@ const TablePackings = () => {
       .finally(() => setLoading(false));
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = (packing: Packing) => {
     setLoading(true);
     axios
-      .put("/api/packings/table/update", null, { params: packingSelected })
+      .put("/api/packings/table/update", null, { params: packing })
       .then((res) => {
         openSnackbar(res.data?.message);
-        setOpenModalEdit(false);
+        setPackingSelected(null);
         getPackings();
       })
       .catch((err) => {
         openSnackbar(err.response?.data?.message);
-        setOpenModalEdit(false);
+        setPackingSelected(null);
       })
       .finally(() => setLoading(false));
   };
@@ -149,11 +150,6 @@ const TablePackings = () => {
       })
       .catch((err) => openSnackbar(err.response?.data?.message))
       .finally(() => setLoading(false));
-  };
-
-  const handleUpdatPackingRow = (packing: any) => {
-    setOpenModalEdit(true);
-    setPackingSelected(packing);
   };
 
   const renderCell = (packing: any, columnKey: any) => {
@@ -184,7 +180,11 @@ const TablePackings = () => {
           <Row justify="center" align="center">
             <Col css={{ d: "flex" }}>
               <Tooltip content="Edit Packing">
-                <IconButton onClick={() => handleUpdatPackingRow(packing)}>
+                <IconButton
+                  onClick={() => {
+                    setPackingSelected(packing);
+                  }}
+                >
                   <EditIcon size={20} fill="#979797" />
                 </IconButton>
               </Tooltip>
@@ -253,7 +253,7 @@ const TablePackings = () => {
           justifyContent: "center",
         }}
       >
-        <Loading size="lg">Loading...</Loading>
+        <Loading size="md">Loading...</Loading>
       </Box>
     );
   }
@@ -345,14 +345,10 @@ const TablePackings = () => {
         password={process.env.NEXT_PUBLIC_ADMIN_PASSWORD as string}
       />
       <ModalPackingsUpdate
-        open={openModalEdit}
-        onClose={() => {
-          setOpenModalEdit(false);
-          setPackingSelected(null);
-        }}
-        onConfirm={handleUpdate}
-        onUpdate={setPackingSelected}
+        open={packingSelected !== null}
         packing={packingSelected}
+        onClose={() => setPackingSelected(null)}
+        onConfirm={handleUpdate}
       />
     </>
   );

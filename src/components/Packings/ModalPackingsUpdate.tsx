@@ -1,46 +1,58 @@
+import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 
 import { Button, Input, Modal, Text } from "@nextui-org/react";
 
+type Packing = {
+  id: string;
+  balloonnumber: string;
+  buildsequence: string;
+  linea: string;
+  packingdiskno: string;
+  partnumber: string;
+  pono: string;
+  qty: string;
+  scannedby: string;
+  updateat: string;
+  vendorno: string;
+};
+
 type ModalPackingsUpdateProps = {
   open: boolean;
-  packing: {
-    id: string;
-    balloonnumber: string;
-    buildsequence: string;
-    linea: string;
-    packingdiskno: string;
-    partnumber: string;
-    pono: string;
-    qty: string;
-    scannedby: string;
-    updateat: string;
-    vendorno: string;
-  } | null;
   onClose: () => void;
-  onConfirm: () => void;
-  onUpdate: (data: {
-    id: string;
-    balloonnumber: string;
-    buildsequence: string;
-    linea: string;
-    packingdiskno: string;
-    partnumber: string;
-    pono: string;
-    qty: string;
-    scannedby: string;
-    updateat: string;
-    vendorno: string;
-  }) => void;
+  onConfirm: (packing: Packing) => void;
+  packing: Packing | null;
+};
+
+const defaultPacking: Packing = {
+  id: "",
+  balloonnumber: "",
+  buildsequence: "",
+  linea: "",
+  packingdiskno: "",
+  partnumber: "",
+  pono: "",
+  qty: "",
+  scannedby: "",
+  updateat: "",
+  vendorno: "",
 };
 
 const ModalPackingsUpdate = ({
   open,
-  packing,
   onClose,
   onConfirm,
-  onUpdate,
+  packing,
 }: ModalPackingsUpdateProps) => {
+  const [packingSelected, setPackingSelected] =
+    useState<Packing>(defaultPacking);
+
+  useEffect(() => {
+    if (packing) {
+      setPackingSelected(packing);
+    }
+  }, [packing]);
+
   return (
     <Modal
       closeButton
@@ -52,109 +64,125 @@ const ModalPackingsUpdate = ({
     >
       <Modal.Header>
         <Text id="modal-title" size={18}>
-          Update Packing: <b>{packing?.packingdiskno}</b>
+          Update Packing: <b>{packingSelected?.packingdiskno}</b>
         </Text>
       </Modal.Header>
-      {packing && (
-        <Modal.Body css={{ py: 30, gap: 30 }}>
-          <Input
-            disabled
-            animated={false}
-            aria-label="packing-input-id"
-            labelPlaceholder="ID"
-            value={packing?.id}
-            onChange={(e) => onUpdate({ ...packing, id: e.target.value })}
-          />
-          <Input
-            animated={false}
-            aria-label="partnumber-input-id"
-            labelPlaceholder="Part Number"
-            value={packing?.partnumber}
-            onChange={(e) =>
-              onUpdate({ ...packing, partnumber: e.target.value })
-            }
-          />
-          <Input
-            animated={false}
-            aria-label="buildsequence-input-id"
-            labelPlaceholder="Build Sequence"
-            value={packing?.buildsequence}
-            onChange={(e) =>
-              onUpdate({ ...packing, buildsequence: e.target.value })
-            }
-          />
-          <Input
-            animated={false}
-            aria-label="balloonnumber-input-id"
-            labelPlaceholder="Ballon Number"
-            value={packing?.balloonnumber}
-            onChange={(e) =>
-              onUpdate({ ...packing, balloonnumber: e.target.value })
-            }
-          />
-          <Input
-            animated={false}
-            aria-label="vendorno-input-id"
-            labelPlaceholder="Vendor No."
-            value={packing?.vendorno}
-            onChange={(e) => onUpdate({ ...packing, vendorno: e.target.value })}
-          />
-          <Input
-            animated={false}
-            aria-label="packingdiskno-input-id"
-            labelPlaceholder="Packing Disk No."
-            value={packing?.packingdiskno}
-            onChange={(e) =>
-              onUpdate({ ...packing, packingdiskno: e.target.value })
-            }
-          />
-          <Input
-            animated={false}
-            aria-label="linea-input-id"
-            labelPlaceholder="Line"
-            value={packing?.linea}
-            onChange={(e) => onUpdate({ ...packing, linea: e.target.value })}
-          />
+      <Modal.Body css={{ py: 30, gap: 30 }}>
+        <Input
+          disabled
+          aria-label="packingSelected-input-id"
+          labelPlaceholder="ID"
+          value={packingSelected?.id}
+          onChange={(e) =>
+            setPackingSelected({ ...packingSelected, id: e.target.value })
+          }
+        />
+        <Input
+          aria-label="partnumber-input-id"
+          labelPlaceholder="Part Number"
+          value={packingSelected?.partnumber}
+          onChange={(e) =>
+            setPackingSelected({
+              ...packingSelected,
+              partnumber: e.target.value,
+            })
+          }
+        />
+        <Input
+          aria-label="buildsequence-input-id"
+          labelPlaceholder="Build Sequence"
+          value={packingSelected?.buildsequence}
+          onChange={(e) =>
+            setPackingSelected({
+              ...packingSelected,
+              buildsequence: e.target.value,
+            })
+          }
+        />
+        <Input
+          aria-label="balloonnumber-input-id"
+          labelPlaceholder="Ballon Number"
+          value={packingSelected?.balloonnumber}
+          onChange={(e) =>
+            setPackingSelected({
+              ...packingSelected,
+              balloonnumber: e.target.value,
+            })
+          }
+        />
+        <Input
+          aria-label="vendorno-input-id"
+          labelPlaceholder="Vendor No."
+          value={packingSelected?.vendorno}
+          onChange={(e) =>
+            setPackingSelected({ ...packingSelected, vendorno: e.target.value })
+          }
+        />
+        <Input
+          animated={false}
+          aria-label="packingdiskno-input-id"
+          labelPlaceholder="Packing Disk No."
+          value={packingSelected?.packingdiskno}
+          onChange={(e) =>
+            setPackingSelected({
+              ...packingSelected,
+              packingdiskno: e.target.value,
+            })
+          }
+        />
+        <Input
+          aria-label="linea-input-id"
+          labelPlaceholder="Line"
+          value={packingSelected?.linea}
+          onChange={(e) =>
+            setPackingSelected({ ...packingSelected, linea: e.target.value })
+          }
+        />
 
-          <Input
-            animated={false}
-            aria-label="pono-input-id"
-            labelPlaceholder="PO No."
-            value={packing?.pono}
-            onChange={(e) => onUpdate({ ...packing, pono: e.target.value })}
-          />
-          <Input
-            animated={false}
-            aria-label="qty-input-id"
-            labelPlaceholder="Quanity"
-            value={packing?.qty}
-            onChange={(e) => onUpdate({ ...packing, qty: e.target.value })}
-          />
-          <Input
-            disabled
-            animated={false}
-            aria-label="updateat-input-id"
-            labelPlaceholder="Update At"
-            initialValue={dayjs(packing?.updateat).format("DD/MM/YYYY")}
-            onChange={(e) => onUpdate({ ...packing, updateat: e.target.value })}
-          />
-          <Input
-            disabled
-            animated={false}
-            aria-label="scannedby-input-id"
-            labelPlaceholder="Scanned By"
-            value={packing?.scannedby}
-            onChange={(e) =>
-              onUpdate({ ...packing, scannedby: e.target.value })
-            }
-          />
-        </Modal.Body>
-      )}
+        <Input
+          aria-label="pono-input-id"
+          labelPlaceholder="PO No."
+          value={packingSelected?.pono}
+          onChange={(e) =>
+            setPackingSelected({ ...packingSelected, pono: e.target.value })
+          }
+        />
+        <Input
+          animated={false}
+          aria-label="qty-input-id"
+          labelPlaceholder="Quanity"
+          value={packingSelected?.qty}
+          onChange={(e) =>
+            setPackingSelected({ ...packingSelected, qty: e.target.value })
+          }
+        />
+        <Input
+          disabled
+          aria-label="updateat-input-id"
+          labelPlaceholder="Update At"
+          initialValue={dayjs(packingSelected?.updateat).format("DD/MM/YYYY")}
+          onChange={(e) =>
+            setPackingSelected({ ...packingSelected, updateat: e.target.value })
+          }
+        />
+        <Input
+          disabled
+          aria-label="scannedby-input-id"
+          labelPlaceholder="Scanned By"
+          value={packingSelected?.scannedby}
+          onChange={(e) =>
+            setPackingSelected({
+              ...packingSelected,
+              scannedby: e.target.value,
+            })
+          }
+        />
+      </Modal.Body>
       <Modal.Footer>
         <Button light size="sm" onClick={onClose}>
           Close
         </Button>
-        <Button flat size="sm" onClick={onConfirm}>
+        <Button flat size="sm" onClick={() => onConfirm(packingSelected)}>
           Update
         </Button>
       </Modal.Footer>
