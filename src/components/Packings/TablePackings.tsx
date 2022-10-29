@@ -43,6 +43,8 @@ const TablePackings = () => {
   const [openModalDelete, setOpenModalDelete] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [packingSelected, setPackingSelected] = useState<Packing | null>(null);
+  const [openModalUpdate, setOpenModalUpdate] = useState(false);
+  const [modalType, setModalType] = useState<"add" | "update" | null>(null);
 
   const [openSnackbar] = useSnackbar();
 
@@ -69,6 +71,11 @@ const TablePackings = () => {
       })
       .catch((err) => setError(err.response?.data?.message))
       .finally(() => setLoading(false));
+  };
+
+  const handleAdd = () => {
+    setModalType("add");
+    setOpenModalUpdate(true);
   };
 
   const handleUpload = () => {
@@ -134,6 +141,22 @@ const TablePackings = () => {
       .finally(() => setLoading(false));
   };
 
+  const handleAdded = (packing: Packing) => {
+    setLoading(true);
+    axios
+      .post("/api/packings/table/add", null, { params: packing })
+      .then((res) => {
+        openSnackbar(res.data?.message);
+        getPackings();
+      })
+      .catch((err) => openSnackbar(err.response?.data?.message))
+      .finally(() => {
+        setLoading(false);
+        setPackingSelected(null);
+        setOpenModalUpdate(false);
+      });
+  };
+
   const handleDeletePackingRow = (part: number, packing: number) => {
     setLoading(true);
 
@@ -150,6 +173,12 @@ const TablePackings = () => {
       })
       .catch((err) => openSnackbar(err.response?.data?.message))
       .finally(() => setLoading(false));
+  };
+
+  const handleCloseModalUpdate = () => {
+    setOpenModalUpdate(false);
+    setPackingSelected(null);
+    setModalType(null);
   };
 
   const renderCell = (packing: any, columnKey: any) => {
@@ -183,6 +212,8 @@ const TablePackings = () => {
                 <IconButton
                   onClick={() => {
                     setPackingSelected(packing);
+                    setModalType("update");
+                    setOpenModalUpdate(true);
                   }}
                 >
                   <EditIcon size={20} fill="#979797" />
@@ -277,6 +308,7 @@ const TablePackings = () => {
   return (
     <>
       <TablePackingsActions
+        onAdd={handleAdd}
         onUpdate={handleUpload}
         onDownload={handleDownload}
         onDelete={() => setOpenModalDelete(true)}
@@ -345,10 +377,11 @@ const TablePackings = () => {
         password={process.env.NEXT_PUBLIC_ADMIN_PASSWORD as string}
       />
       <ModalPackingsUpdate
-        open={packingSelected !== null}
+        open={openModalUpdate}
+        type={modalType}
         packing={packingSelected}
-        onClose={() => setPackingSelected(null)}
-        onConfirm={handleUpdate}
+        onClose={handleCloseModalUpdate}
+        onConfirm={modalType === "update" ? handleUpdate : handleAdded}
       />
     </>
   );

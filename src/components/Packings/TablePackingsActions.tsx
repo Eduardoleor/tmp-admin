@@ -1,10 +1,17 @@
 import { useRef } from "react";
-import { Delete, PaperDownload, PaperPlus, PaperUpload } from "react-iconly";
+import {
+  Delete,
+  PaperDownload,
+  PaperPlus,
+  PaperUpload,
+  Plus,
+} from "react-iconly";
 
 import { Box } from "@/components/system/Box";
 import { Button, Input, Text } from "@nextui-org/react";
 
 type TablePackingsActionsProps = {
+  onAdd: () => void;
   onUpdate: () => void;
   onDownload: () => void;
   onDelete: () => void;
@@ -14,6 +21,7 @@ type TablePackingsActionsProps = {
 };
 
 const TablePackingsActions = ({
+  onAdd,
   onUpdate,
   onDownload,
   onDelete,
@@ -75,6 +83,16 @@ const TablePackingsActions = ({
         </Button>
       </Box>
       <Box css={{ display: "flex", gap: 20 }}>
+        <Button
+          auto
+          flat
+          color="primary"
+          icon={<Plus set="bold" style={{ paddingRight: 5 }} />}
+          onPress={onAdd}
+          disabled={!data?.length}
+        >
+          Added new packing
+        </Button>
         <Button
           auto
           flat
