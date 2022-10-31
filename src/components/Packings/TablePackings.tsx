@@ -1,13 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import { useSnackbar } from "react-simple-snackbar";
 
 import { EditIcon } from "@/components/Icons//EditIcon";
 import { DeleteIcon } from "@/components/Icons/DeleteIcon";
-import ModalPackingsDelete from "@/components/packings/ModalPackingsDelete";
-import ModalPackingsUpdate from "@/components/packings/ModalPackingsUpdate";
-import TablePackingsActions from "@/components/packings/TablePackingsActions";
 import { Box } from "@/components/system/Box";
 import { IconButton } from "@/components/system/IconButton";
 import {
@@ -35,16 +32,23 @@ type Packing = {
   vendorno: string;
 };
 
-const TablePackings = () => {
+type TablePackingsProps = {
+  onSetData: (data: Packing) => void;
+  onPackingsSelected: (packings: Packing) => void;
+  onSelectModalType: (type: "add" | "update" | null) => void;
+  onSelectModalOpen: (open: boolean) => void;
+};
+
+const TablePackings = ({
+  onSetData,
+  onPackingsSelected,
+  onSelectModalOpen,
+  onSelectModalType,
+}: TablePackingsProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState<[] | any>([]);
-  const [fileSelected, setFileSelected] = useState<File[] | null>(null);
-  const [openModalDelete, setOpenModalDelete] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [packingSelected, setPackingSelected] = useState<Packing | null>(null);
-  const [openModalUpdate, setOpenModalUpdate] = useState(false);
-  const [modalType, setModalType] = useState<"add" | "update" | null>(null);
 
   const [openSnackbar] = useSnackbar();
 
@@ -60,102 +64,19 @@ const TablePackings = () => {
     { name: "ACTIONS", uid: "actions" },
   ];
 
-  const getPackings = () => {
+  const getPackings = useCallback(() => {
     setLoading(true);
     axios("/api/packings/list")
       .then((res) => {
         const sortedIPackings = res.data?.data?.sort((p1: any, p2: any) =>
           p1.id < p2.id ? 1 : p1.id > p2.id ? -1 : 0
         );
+        onSetData(sortedIPackings);
         setData(sortedIPackings);
       })
       .catch((err) => setError(err.response?.data?.message))
       .finally(() => setLoading(false));
-  };
-
-  const handleAdd = () => {
-    setModalType("add");
-    setOpenModalUpdate(true);
-  };
-
-  const handleUpload = () => {
-    if (fileSelected) {
-      setLoading(true);
-
-      const formData = new FormData();
-      formData.append("blob", fileSelected[0], "file");
-
-      axios({
-        method: "post",
-        url: "/api/packings/upload",
-        data: formData,
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-        .then((res) => {
-          openSnackbar(res.data?.message);
-          getPackings();
-        })
-        .catch((err) => openSnackbar(err.response?.data?.message))
-        .finally(() => setLoading(false));
-    }
-  };
-
-  const handleDownload = () => {
-    setLoading(true);
-    axios("/api/packings/download", { responseType: "blob" })
-      .then((res) => {
-        const file = window.URL.createObjectURL(res.data);
-        window.location.assign(file);
-        openSnackbar("Downloaded successfully");
-      })
-      .catch((err) => openSnackbar(err.response?.data?.message))
-      .finally(() => setLoading(false));
-  };
-
-  const handleDelete = () => {
-    setLoading(true);
-    axios
-      .delete("/api/packings/delete")
-      .then((res) => {
-        openSnackbar(res.data?.message);
-        setOpenModalDelete(false);
-        getPackings();
-      })
-      .catch((err) => openSnackbar(err.response?.data?.message))
-      .finally(() => setLoading(false));
-  };
-
-  const handleUpdate = (packing: Packing) => {
-    setLoading(true);
-    axios
-      .put("/api/packings/table/update", null, { params: packing })
-      .then((res) => {
-        openSnackbar(res.data?.message);
-        setPackingSelected(null);
-        getPackings();
-      })
-      .catch((err) => {
-        openSnackbar(err.response?.data?.message);
-        setPackingSelected(null);
-      })
-      .finally(() => setLoading(false));
-  };
-
-  const handleAdded = (packing: Packing) => {
-    setLoading(true);
-    axios
-      .post("/api/packings/table/add", null, { params: packing })
-      .then((res) => {
-        openSnackbar(res.data?.message);
-        getPackings();
-      })
-      .catch((err) => openSnackbar(err.response?.data?.message))
-      .finally(() => {
-        setLoading(false);
-        setPackingSelected(null);
-        setOpenModalUpdate(false);
-      });
-  };
+  }, [onSetData]);
 
   const handleDeletePackingRow = (part: number, packing: number) => {
     setLoading(true);
@@ -173,12 +94,6 @@ const TablePackings = () => {
       })
       .catch((err) => openSnackbar(err.response?.data?.message))
       .finally(() => setLoading(false));
-  };
-
-  const handleCloseModalUpdate = () => {
-    setOpenModalUpdate(false);
-    setPackingSelected(null);
-    setModalType(null);
   };
 
   const renderCell = (packing: any, columnKey: any) => {
@@ -211,9 +126,9 @@ const TablePackings = () => {
               <Tooltip content="Edit Packing">
                 <IconButton
                   onClick={() => {
-                    setPackingSelected(packing);
-                    setModalType("update");
-                    setOpenModalUpdate(true);
+                    onPackingsSelected(packing);
+                    onSelectModalType("update");
+                    onSelectModalOpen(true);
                   }}
                 >
                   <EditIcon size={20} fill="#979797" />
@@ -245,28 +160,14 @@ const TablePackings = () => {
 
   const filteredRows = useMemo(() => {
     if (!searchTerm) return data;
-
-    if (data.length > 0) {
-      const attributes = Object.keys(data[0] as any);
-      const list: any = [];
-      for (const current of data as any) {
-        for (const attribute of attributes) {
-          if (attribute === "key") {
-            continue;
-          }
-          const value: any = current[attribute];
-          if (value && value.toLowerCase() === searchTerm.toLowerCase()) {
-            const found = data.find((row: any) => row.key === current.key);
-            if (found) {
-              list.push(found);
-            }
-          }
-        }
-      }
-      return list;
-    }
-
-    return [];
+    return data.filter(
+      (packing: any) => {
+        return Object.keys(packing).some((key) => {
+          return String(packing[key]).toLowerCase().includes(searchTerm);
+        });
+      },
+      [searchTerm, data]
+    );
   }, [searchTerm, data]);
 
   useEffect(() => {
@@ -307,15 +208,6 @@ const TablePackings = () => {
 
   return (
     <>
-      <TablePackingsActions
-        onAdd={handleAdd}
-        onUpdate={handleUpload}
-        onDownload={handleDownload}
-        onDelete={() => setOpenModalDelete(true)}
-        onSelectedFile={(file) => setFileSelected(file)}
-        fileSelected={fileSelected}
-        data={data}
-      />
       {!loading && data.length > 0 && (
         <>
           <Divider css={{ my: 30 }} />
@@ -326,7 +218,8 @@ const TablePackings = () => {
             fullWidth
             clearable
             bordered
-            labelPlaceholder="Search..."
+            autoComplete="new-password"
+            labelPlaceholder="Search Packing"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             css={{ my: 35 }}
@@ -370,19 +263,6 @@ const TablePackings = () => {
       ) : (
         <Text>Not found packings</Text>
       )}
-      <ModalPackingsDelete
-        open={openModalDelete}
-        onClose={() => setOpenModalDelete(false)}
-        onConfirm={handleDelete}
-        password={process.env.NEXT_PUBLIC_ADMIN_PASSWORD as string}
-      />
-      <ModalPackingsUpdate
-        open={openModalUpdate}
-        type={modalType}
-        packing={packingSelected}
-        onClose={handleCloseModalUpdate}
-        onConfirm={modalType === "update" ? handleUpdate : handleAdded}
-      />
     </>
   );
 };

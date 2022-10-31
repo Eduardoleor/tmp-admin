@@ -32,6 +32,7 @@ const ModalPackingsDelete = ({
       <Modal.Body>
         <Text>Password</Text>
         <Input.Password
+          autoComplete="new-password"
           placeholder="******"
           value={passwordInput}
           onChange={(e) => setPasswordInput(e.target.value)}
