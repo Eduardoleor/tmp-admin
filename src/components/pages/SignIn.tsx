@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { getCookies, setCookies } from "cookies-next";
-import { AES } from "crypto-js";
 
 import { Box } from "@/components/system/Box";
 import {
@@ -31,28 +30,26 @@ const SignIn = () => {
   const handleSignIn = useCallback(() => {
     setLoadingUser(true);
 
-    const cipherPassword = AES.encrypt(
-      session.password,
-      process.env.NEXT_PUBLIC_KEY_CYPHER as string
-    ).toString();
-
     const params = {
       user: session.email,
-      password: cipherPassword,
+      password: session.password,
     };
 
     axios("/api/auth/session", { params })
       .then((res) => {
-        setErrorUser(null);
         if (res.data) {
           const user = res.data;
-          setCookies("user", { user });
           setCookies("token", { token: user.jwt });
+          setErrorUser(null);
           router.push("/");
         }
       })
-      .catch((err) => setErrorUser(err.response?.data?.message))
-      .finally(() => setLoadingUser(false));
+      .catch((err) => {
+        setErrorUser(err.response?.data?.message);
+      })
+      .finally(() => {
+        setLoadingUser(false);
+      });
   }, [router, session.email, session.password]);
 
   useEffect(() => {
@@ -126,11 +123,9 @@ const SignIn = () => {
             >
               {loadingUser ? <Loading /> : "Sign In"}
             </Button>
-            {errorUser && (
-              <Text color="$error" css={{ mt: 15, mb: 10 }}>
-                {errorUser}
-              </Text>
-            )}
+            <Text color="$error" css={{ mt: 15, mb: 10 }}>
+              {errorUser}
+            </Text>
           </Card.Footer>
         </Card>
       </Box>
