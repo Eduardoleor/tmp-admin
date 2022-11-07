@@ -71,7 +71,7 @@ const ModalAddUsers = ({
     >
       <Modal.Header>
         <Text id="modal-title" size={18}>
-          Add new user
+          {userSelected ? "Update User" : "Add User"}
         </Text>
       </Modal.Header>
       <Modal.Body>
@@ -161,8 +161,7 @@ const ModalAddUsers = ({
       <Modal.Footer>
         <Button
           auto
-          flat
-          color="error"
+          light
           onClick={() => {
             onClose();
             setUser(userDefault);
