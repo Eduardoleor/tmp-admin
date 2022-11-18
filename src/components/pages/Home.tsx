@@ -63,10 +63,8 @@ const Home = () => {
   const handleUpload = () => {
     if (fileSelected) {
       setLoading(true);
-
       const formData = new FormData();
       formData.append("blob", fileSelected[0], "file");
-
       axios({
         method: "post",
         url: "/api/packings/upload",
@@ -75,6 +73,7 @@ const Home = () => {
       })
         .then((res) => {
           openSnackbar(res.data?.message);
+          setFileSelected(null);
           getPackings();
         })
         .catch((err) => openSnackbar(err.response?.data?.message))
