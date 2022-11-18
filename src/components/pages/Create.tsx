@@ -104,6 +104,27 @@ const UserCreate = () => {
     setOpenModalAddUsers(true);
   };
 
+  const handleDeleteUser = (id: string) => {
+    axios
+      .delete("/api/users/delete", { params: { id } })
+      .then((res) => {
+        if (res.data) {
+          setOpenModalAddUsers(false);
+          openSnackbar("User deleted successfully");
+        } else {
+          openSnackbar("Error deleting user");
+        }
+      })
+      .catch(() => {
+        openSnackbar("Error deleting user");
+      })
+      .finally(() => {
+        setLoadingAddUsers(false);
+        setOpenModalAddUsers(false);
+        callUsers();
+      });
+  };
+
   const handleChangeStatus = (status: boolean, id: string) => {
     setLoadingCell(true);
     axios
@@ -177,6 +198,7 @@ const UserCreate = () => {
         onClose={handleCloseModalAddUsers}
         onConfirm={handleAddedUser}
         onUpdate={handleUpdateUser}
+        onDelete={handleDeleteUser}
       />
     </Layout>
   );

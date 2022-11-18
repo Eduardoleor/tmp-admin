@@ -18,6 +18,7 @@ type ModalAddUsersProps = {
   onClose: () => void;
   onConfirm: (user: any) => void;
   onUpdate: (user: any) => void;
+  onDelete: (user: any) => void;
 };
 
 type User = {
@@ -45,6 +46,7 @@ const ModalAddUsers = ({
   onClose,
   onConfirm,
   onUpdate,
+  onDelete,
 }: ModalAddUsersProps) => {
   const [user, setUser] = useState<User>(userDefault);
 
@@ -159,17 +161,11 @@ const ModalAddUsers = ({
         )}
       </Modal.Body>
       <Modal.Footer>
-        <Button
-          auto
-          light
-          onClick={() => {
-            onClose();
-            setUser(userDefault);
-          }}
-          disabled={loading}
-        >
-          Close
-        </Button>
+        {userSelected && (
+          <Button auto color="error" onPress={() => onDelete(user.id)}>
+            Delete User
+          </Button>
+        )}
         <Button
           auto
           disabled={
@@ -199,6 +195,17 @@ const ModalAddUsers = ({
           ) : (
             "Add"
           )}
+        </Button>
+        <Button
+          auto
+          light
+          onClick={() => {
+            onClose();
+            setUser(userDefault);
+          }}
+          disabled={loading}
+        >
+          Close
         </Button>
       </Modal.Footer>
     </Modal>

@@ -4,21 +4,20 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method === "PUT") {
+  if (req.method === "DELETE") {
     const pool = require("../../../lib/db");
     const query = req.query;
-    const { id, user_id, full_name } = query;
+    const { id } = query;
 
     try {
-      if (id && user_id && full_name) {
-        const results = await pool.query(
-          "UPDATE USERS SET user_id = $1, full_name = $2  WHERE id = $3",
-          [user_id, full_name, id]
-        );
+      if (id) {
+        const results = await pool.query("DELETE FROM USERS WHERE id = $1", [
+          id,
+        ]);
         return res.status(200).json({
           success: true,
           status: 200,
-          message: "User updated successfully",
+          message: "User deleted successfully",
           data: results.rows,
         });
       } else {

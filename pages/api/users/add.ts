@@ -4,7 +4,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method?.toLocaleLowerCase() === "post") {
+  if (req.method === "POST") {
     const pool = require("../../../lib/db");
     const query = req.query;
     const {

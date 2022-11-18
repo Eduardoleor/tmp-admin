@@ -4,7 +4,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method?.toLocaleLowerCase() === "put") {
+  if (req.method === "PUT") {
     const pool = require("../../../lib/db");
     const query = req.query;
     const { id, is_active } = query;
