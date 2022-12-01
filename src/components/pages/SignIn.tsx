@@ -16,7 +16,7 @@ import {
 const SignIn = () => {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState({
-    email: "",
+    id: "",
     password: "",
   });
 
@@ -31,15 +31,18 @@ const SignIn = () => {
     setLoadingUser(true);
 
     const params = {
-      user: session.email,
+      user: session.id,
       password: session.password,
+      from: "web",
     };
 
     axios("/api/auth/session", { params })
       .then((res) => {
         if (res.data) {
-          const user = res.data;
-          setCookies("token", { token: user.jwt });
+          const data = res.data;
+          const user = data.user;
+          setCookies("user", { user: user });
+          setCookies("token", { token: user.jwt, user: user });
           setErrorUser(null);
           router.push("/");
         }
@@ -50,7 +53,7 @@ const SignIn = () => {
       .finally(() => {
         setLoadingUser(false);
       });
-  }, [router, session.email, session.password]);
+  }, [router, session.id, session.password]);
 
   useEffect(() => {
     if (token) {
@@ -94,13 +97,11 @@ const SignIn = () => {
           </Card.Header>
           <Card.Body css={{ gap: 20 }}>
             <Input
-              label="Email"
-              placeholder="user@gmail.com"
-              type="email"
-              value={session.email}
-              onChange={(e) =>
-                setSession({ ...session, email: e.target.value })
-              }
+              label="Employee ID"
+              placeholder="12847281"
+              type="number"
+              value={session.id}
+              onChange={(e) => setSession({ ...session, id: e.target.value })}
             />
             <Input.Password
               label="Password"
@@ -117,7 +118,7 @@ const SignIn = () => {
               size="md"
               css={{ width: "100%" }}
               disabled={
-                session.email === "" || session.password === "" || loadingUser
+                session.id === "" || session.password === "" || loadingUser
               }
               onPress={handleSignIn}
             >

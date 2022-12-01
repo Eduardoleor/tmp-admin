@@ -89,10 +89,10 @@ const ModalAddUsers = ({
             })
           }
         />
-        <Text>Email</Text>
+        <Text>Employee ID</Text>
         <Input
-          placeholder="Email"
-          type="email"
+          placeholder="Employee ID"
+          type="number"
           value={user.user_id}
           onChange={(e) =>
             setUser({

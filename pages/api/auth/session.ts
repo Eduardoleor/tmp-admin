@@ -7,13 +7,16 @@ export default async function handler(
 ) {
   const user_id = req.query.user;
   const password = req.query.password;
+  const from = req.query.from;
 
   if (
-    req.method?.toLocaleLowerCase() === "get" &&
+    req.method === "GET" &&
     user_id?.length &&
-    password?.length
+    password?.length &&
+    from?.length
   ) {
     const pool = require("../../../lib/db");
+    const isAdmin = from === "web";
 
     try {
       const user = await pool.query("SELECT * FROM USERS WHERE USER_ID = $1", [
@@ -35,7 +38,14 @@ export default async function handler(
 
       if (doesPasswordMatch) {
         if (user.rows[0].is_active) {
-          if (user.rows[0].role === "administrator") {
+          if (isAdmin && user.rows[0].role === "administrator") {
+            return res.status(200).json({
+              success: true,
+              status: 200,
+              message: "User found",
+              user: user.rows[0],
+            });
+          } else if (!isAdmin && user.rows[0].role === "employee") {
             return res.status(200).json({
               success: true,
               status: 200,

@@ -25,6 +25,7 @@ const UserCreate = () => {
 
   const cookies = getCookies();
   const token = cookies?.token;
+
   const router = useRouter();
   const [openSnackbar] = useSnackbar();
 

@@ -39,7 +39,7 @@ const TableUsers = ({
 }: TableUsersProps) => {
   const columns = [
     { name: "ID", uid: "id" },
-    { uid: "user_id", name: "Email" },
+    { uid: "user_id", name: "Employee ID" },
     { uid: "full_name", name: "Full Name" },
     { uid: "role", name: "Role" },
     { uid: "is_active", name: "Active" },
