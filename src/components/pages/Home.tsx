@@ -5,7 +5,6 @@ import { getCookies } from "cookies-next";
 import { useSnackbar } from "react-simple-snackbar";
 
 import ModalPackingsDelete from "@/components/packings/ModalPackingsDelete";
-import ModalPackingsUpdate from "@/components/packings/ModalPackingsUpdate";
 import TablePackings from "@/components/packings/TablePackings";
 import TablePackingsActions from "@/components/packings/TablePackingsActions";
 import { Box } from "@/components/system/Box";
@@ -31,9 +30,6 @@ const Home = () => {
   const [data, setData] = useState<[] | any>([]);
   const [fileSelected, setFileSelected] = useState<File[] | null>(null);
   const [openModalDelete, setOpenModalDelete] = useState(false);
-  const [openModalUpdate, setOpenModalUpdate] = useState(false);
-  const [modalType, setModalType] = useState<"add" | "update" | null>(null);
-  const [packingSelected, setPackingSelected] = useState<Packing | null>(null);
 
   const [openSnackbar] = useSnackbar();
   const cookies = getCookies();
@@ -94,8 +90,7 @@ const Home = () => {
   };
 
   const handleAdd = () => {
-    setModalType("add");
-    setOpenModalUpdate(true);
+    router.push("/packings/add");
   };
 
   const handleDelete = () => {
@@ -111,45 +106,11 @@ const Home = () => {
       .finally(() => setLoading(false));
   };
 
-  const handleCloseModalUpdate = () => {
-    setOpenModalUpdate(false);
-    setPackingSelected(null);
-    setModalType(null);
-  };
-
   const handleUpdate = (packing: Packing) => {
-    setLoading(true);
-    axios
-      .put("/api/packings/table/update", null, { params: packing })
-      .then((res) => {
-        openSnackbar(res.data?.message);
-        setPackingSelected(null);
-        getPackings();
-      })
-      .catch((err) => {
-        openSnackbar(err.response?.data?.message);
-        setPackingSelected(null);
-      })
-      .finally(() => {
-        setLoading(false);
-        setOpenModalUpdate(false);
-      });
-  };
-
-  const handleAdded = (packing: Packing) => {
-    setLoading(true);
-    axios
-      .post("/api/packings/table/add", null, { params: packing })
-      .then((res) => {
-        openSnackbar(res.data?.message);
-        getPackings();
-      })
-      .catch((err) => openSnackbar(err.response?.data?.message))
-      .finally(() => {
-        setLoading(false);
-        setPackingSelected(null);
-        setOpenModalUpdate(false);
-      });
+    router.push({
+      pathname: `/packings/edit`,
+      query: packing,
+    });
   };
 
   if (loading) {
@@ -182,24 +143,12 @@ const Home = () => {
         fileSelected={fileSelected}
         data={data}
       />
-      <TablePackings
-        onSetData={setData}
-        onPackingsSelected={setPackingSelected}
-        onSelectModalOpen={setOpenModalUpdate}
-        onSelectModalType={setModalType}
-      />
+      <TablePackings onSetData={setData} onEditPacking={handleUpdate} />
       <ModalPackingsDelete
         open={openModalDelete}
         onClose={() => setOpenModalDelete(false)}
         onConfirm={handleDelete}
         password={process.env.NEXT_PUBLIC_ADMIN_PASSWORD as string}
-      />
-      <ModalPackingsUpdate
-        open={openModalUpdate}
-        type={modalType}
-        packing={packingSelected}
-        onClose={handleCloseModalUpdate}
-        onConfirm={modalType === "update" ? handleUpdate : handleAdded}
       />
     </Layout>
   );

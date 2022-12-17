@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { getCookie } from "cookies-next";
+
 import { EditIcon } from "@/components/Icons//EditIcon";
 import { Box } from "@/components/system/Box";
 import { IconButton } from "@/components/system/IconButton";
@@ -18,6 +21,7 @@ type User = {
   role: string;
   jwt: string;
   is_active: boolean;
+  user_id: string;
 };
 
 type TableUsersProps = {
@@ -37,6 +41,10 @@ const TableUsers = ({
   onEditUser,
   onToggleUserStatus,
 }: TableUsersProps) => {
+  const cookie = JSON.parse(getCookie("user", undefined) as string);
+  const { user } = cookie;
+  const { id } = user;
+
   const columns = [
     { name: "ID", uid: "id" },
     { uid: "user_id", name: "Employee ID" },
@@ -45,51 +53,6 @@ const TableUsers = ({
     { uid: "is_active", name: "Active" },
     { uid: "actions", name: "Actions" },
   ];
-
-  const renderCell = (user: any, columnKey: any) => {
-    const cellValue = user[columnKey];
-    switch (columnKey) {
-      case "role":
-        return (
-          <Row justify="center" align="center">
-            <Col css={{ d: "flex" }}>
-              <Text transform="capitalize">{cellValue}</Text>
-            </Col>
-          </Row>
-        );
-      case "is_active":
-        return (
-          <Row justify="center" align="center">
-            <Col css={{ d: "flex" }}>
-              {!loadingCell ? (
-                <Switch
-                  checked={cellValue}
-                  onChange={(s) =>
-                    onToggleUserStatus(s.target.checked, user.id)
-                  }
-                />
-              ) : (
-                <Loading type="spinner" color="currentColor" size="sm" />
-              )}
-            </Col>
-          </Row>
-        );
-      case "actions":
-        return (
-          <Row justify="center" align="center">
-            <Col css={{ d: "flex" }}>
-              <Tooltip content="Edit user">
-                <IconButton onClick={() => onEditUser(user)}>
-                  <EditIcon size={20} fill="#979797" />
-                </IconButton>
-              </Tooltip>
-            </Col>
-          </Row>
-        );
-      default:
-        return cellValue;
-    }
-  };
 
   if (loading) {
     return (
@@ -122,6 +85,55 @@ const TableUsers = ({
       </Box>
     );
   }
+
+  const renderCell = (user: any, columnKey: any) => {
+    const cellValue = user[columnKey];
+    switch (columnKey) {
+      case "role":
+        return (
+          <Row justify="center" align="center">
+            <Col css={{ d: "flex" }}>
+              <Text transform="capitalize">{cellValue}</Text>
+            </Col>
+          </Row>
+        );
+      case "is_active":
+        return (
+          <Row justify="center" align="center">
+            <Col css={{ d: "flex" }}>
+              {!loadingCell ? (
+                <Switch
+                  checked={cellValue}
+                  onChange={(s) =>
+                    onToggleUserStatus(s.target.checked, user.id)
+                  }
+                  disabled={user.id === id}
+                />
+              ) : (
+                <Loading type="spinner" color="currentColor" size="sm" />
+              )}
+            </Col>
+          </Row>
+        );
+      case "actions":
+        return (
+          <Row justify="center" align="center">
+            <Col css={{ d: "flex" }}>
+              <Tooltip content={user.id === id ? "Current User" : "Edit User"}>
+                <IconButton
+                  onClick={() => onEditUser(user)}
+                  disabled={user.id === id}
+                >
+                  <EditIcon size={20} fill="#979797" />
+                </IconButton>
+              </Tooltip>
+            </Col>
+          </Row>
+        );
+      default:
+        return cellValue;
+    }
+  };
 
   return (
     <>

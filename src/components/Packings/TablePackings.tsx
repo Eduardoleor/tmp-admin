@@ -34,17 +34,10 @@ type Packing = {
 
 type TablePackingsProps = {
   onSetData: (data: Packing) => void;
-  onPackingsSelected: (packings: Packing) => void;
-  onSelectModalType: (type: "add" | "update" | null) => void;
-  onSelectModalOpen: (open: boolean) => void;
+  onEditPacking: (data: Packing) => void;
 };
 
-const TablePackings = ({
-  onSetData,
-  onPackingsSelected,
-  onSelectModalOpen,
-  onSelectModalType,
-}: TablePackingsProps) => {
+const TablePackings = ({ onSetData, onEditPacking }: TablePackingsProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState<[] | any>([]);
@@ -126,9 +119,7 @@ const TablePackings = ({
               <Tooltip content="Edit Packing">
                 <IconButton
                   onClick={() => {
-                    onPackingsSelected(packing);
-                    onSelectModalType("update");
-                    onSelectModalOpen(true);
+                    onEditPacking(packing);
                   }}
                 >
                   <EditIcon size={20} fill="#979797" />

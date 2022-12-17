@@ -7,14 +7,31 @@ export default async function handler(
   const pool = require("../../../lib/db");
   try {
     const query = req.query;
-    const { qty, id, part } = query;
+    const { id, user } = query;
 
-    if (qty && id && part) {
+    if (id && user) {
       const allTasks = await pool.query(
-        "UPDATE WEEKLY_INVENTORY SET qty = $1 WHERE packingdiskno = $2 and PartNumber = $3",
-        [qty, id, part]
+        "SELECT * FROM WEEKLY_INVENTORY WHERE ID = $1",
+        [id]
       );
-      return res.status(200).json(allTasks.rows);
+
+      const tasks = allTasks.rows;
+      if (tasks.length > 0) {
+        const qty = Number(tasks[0].qty);
+        if (qty > 0) {
+          const newQty = qty - 1;
+          await pool.query(
+            "UPDATE WEEKLY_INVENTORY SET qty = $1, scannedby = $2 WHERE id = $3",
+            [newQty, user, id]
+          );
+          return res.status(200).json({
+            message: "Success",
+          });
+        }
+        return res.status(400).json({
+          message: "Bad Request",
+        });
+      }
     }
 
     return res.status(400).json({
