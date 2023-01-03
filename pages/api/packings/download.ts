@@ -13,7 +13,8 @@ export default async function handler(
       const { rows } = getTable;
 
       if (rows?.length) {
-        const items = rows.filter((value: any) => Number(value.qty) > 0);
+        //const items = rows.filter((value: any) => Number(value.qty) > 0);
+        const items = rows;
         let workbook = new excel.Workbook();
         let worksheet = workbook.addWorksheet("General Report");
 
@@ -27,6 +28,7 @@ export default async function handler(
           { header: "Packing Disk No.", key: "packingdiskno", width: 10 },
           { header: "Linea", key: "linea", width: 10 },
           { header: "Update At", key: "updateat", width: 10 },
+          { header: "Scanned By", key: "scannedby", width: 10 },
         ];
         worksheet.addRows(items);
         res.setHeader(
